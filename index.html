@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>My Coffee Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
@@ -17,7 +17,7 @@
         }
         h2 { 
             margin: 0; 
-            padding: 15px 10px; 
+            padding: calc(15px + env(safe-area-inset-top)) 10px 15px 10px; 
             font-size: 16px; 
             background-color: #333; 
             color: white; 

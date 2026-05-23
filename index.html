@@ -80,6 +80,15 @@
                 width: 100%; /* スマホではリストを横幅いっぱいに戻す */
                 border-right: none;
                 border-top: 1px solid #ccc;
+                /* ↓ここを追加：高さをコンテンツ量依存ではなく、割合で指定する */
+                flex: 1; /* リストの割合を1に設定 */
+                height: auto; /* パソコン用のheight: 100%を一度リセット */
+            }
+            /* ↓ここを追加 */
+            #map {
+                flex: 2; /* 地図の割合を2に設定（画面の約2/3を使う） */
+                height: auto; /* パソコン用のheight: 100%を一度リセット */
+                min-height: 200px; /* 最低限の地図高さを確保 (Leaflet対策) */
             }
         }
     </style>

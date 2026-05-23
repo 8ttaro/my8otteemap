@@ -36,7 +36,7 @@
     "comment": ""
   },
   {
-    "name": "AND COFFEE BREWERS",
+    "name": "AND COFFEE BREWERS（熊本）",
     "lat": 32.80188798041991, 
     "lng": 130.70974684230697,
     "date": "2026-03-07",
@@ -60,6 +60,15 @@
     "date": "2026-03-11",
     "drink": "BAKE STAND BLEND",
     "price": 500,
+    "comment": ""
+  },
+  {
+    "name": "TAKAO MOUNTAIN HOUSE（高尾）",
+    "lat": 35.63143469195577, 
+    "lng": 139.26835359098808,
+    "date": "2026-01-11",
+    "drink": "",
+    "price": null,
     "comment": ""
   }
 ]

@@ -131,64 +131,117 @@
 
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution: '&copy; OpenStreetMap &copy; CARTO' }).addTo(map);
 
-        var pinColor = '#8B4513'; 
-        var pinSvg = `
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="30" height="45">
-                <path fill="${pinColor}" stroke="#ffffff" stroke-width="2" d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24C24 5.4 18.6 0 12 0zm0 17c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5z"/>
-            </svg>`;
-
-        var customIcon = L.divIcon({
-            html: pinSvg,
-            className: '', 
-            iconSize: [30, 45], 
-            iconAnchor: [15, 45], 
-            popupAnchor: [0, -45] 
-        });
-
-        // ★追加：スマホ用ボタンの動作設定
         var toggleBtn = document.getElementById('toggle-list-btn');
         var listContainer = document.getElementById('list-container');
 
         toggleBtn.addEventListener('click', function() {
-            listContainer.classList.toggle('active'); // 表示/非表示を切り替え
-            
+            listContainer.classList.toggle('active'); 
             if (listContainer.classList.contains('active')) {
                 toggleBtn.textContent = '地図のみ表示 🗺️';
             } else {
                 toggleBtn.textContent = 'リストを表示 📝';
             }
-            
-            // 地図のサイズが変わったことをLeafletに教えて再計算させる（これがないと地図がバグります）
             setTimeout(function() { map.invalidateSize(); }, 100);
         });
 
         fetch('shops.json')
             .then(response => response.json())
-            .then(data => {
+            .then(flatData => {
                 
+                // ==========================================
+                // ★追加した魔法のコード：平坦なデータを「店名」で自動でまとめる
+                // ==========================================
+                var groupedShops = {};
+
+                flatData.forEach(function(item) {
+                    // もし初めて見る店名だったら、新しい箱を作る
+                    if (!groupedShops[item.name]) {
+                        groupedShops[item.name] = {
+                            name: item.name,
+                            lat: item.lat,
+                            lng: item.lng,
+                            visits: [] // 履歴を入れる空のリスト
+                        };
+                    }
+                    // そのお店の履歴リストに、今回の訪問データを追加する
+                    groupedShops[item.name].visits.push({
+                        date: item.date,
+                        drink: item.drink,
+                        price: item.price,
+                        comment: item.comment
+                    });
+                });
+
+                // まとめたデータを配列（リスト）の形に変換する
+                var data = Object.values(groupedShops);
+                // ==========================================
+
+                // ここから下は前回と同じ（まとまったデータを使って画面を作る）
                 data.sort(function(a, b) {
-                    return new Date(a.date) - new Date(b.date);
+                    var latestA = new Date(Math.max(...a.visits.map(v => new Date(v.date))));
+                    var latestB = new Date(Math.max(...b.visits.map(v => new Date(v.date))));
+                    return latestA - latestB; 
                 });
 
                 data.forEach(shop => {
-                    var popupContent = '<b>' + shop.name + '</b><br>' +
-                                       '<span style="color: #888; font-size: 12px;">📅 ' + shop.date + '</span><br>' +
-                                       '☕️ ' + shop.drink + '（¥' + shop.price + '）<br>' +
-                                       '<small style="color: #555;">' + shop.comment + '</small>';
+                    // 各お店の訪問履歴を「最新が一番上」になるように並び替え
+                    shop.visits.sort((a, b) => new Date(b.date) - new Date(a.date));
+                    
+                    var visitCount = shop.visits.length;
+                    var latestVisit = shop.visits[0]; 
+
+                    var pinColor = '#8B4513'; 
+                    var badgeSvg = '';
+                    if (visitCount > 1) {
+                        badgeSvg = `
+                            <circle cx="22" cy="6" r="8" fill="#e74c3c" stroke="#ffffff" stroke-width="2" />
+                            <text x="22" y="9" font-family="sans-serif" font-size="9" font-weight="bold" fill="white" text-anchor="middle">${visitCount}</text>
+                        `;
+                    }
+                    
+                    var pinSvg = `
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="30" height="45" style="overflow: visible;">
+                            <path fill="${pinColor}" stroke="#ffffff" stroke-width="2" d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24C24 5.4 18.6 0 12 0zm0 17c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5z"/>
+                            ${badgeSvg}
+                        </svg>`;
+
+                    var customIcon = L.divIcon({
+                        html: pinSvg,
+                        className: '', 
+                        iconSize: [30, 45], 
+                        iconAnchor: [15, 45], 
+                        popupAnchor: [0, -45] 
+                    });
+
+                    // ポップアップの生成処理
+                    var popupContent = '<b style="font-size:15px;">' + shop.name + '</b>';
+                    popupContent += '<div class="popup-history">';
+                    
+                    shop.visits.forEach(visit => {
+                        popupContent += '<div class="history-item">';
+                        popupContent += '<span style="color: #888; font-size: 12px;">📅 ' + visit.date + '</span><br>';
+                        popupContent += '☕️ ' + visit.drink + '（¥' + visit.price + '）<br>';
+                        popupContent += '<small style="color: #555;">' + visit.comment + '</small>';
+                        popupContent += '</div>';
+                    });
+                    popupContent += '</div>';
                     
                     var marker = L.marker([shop.lat, shop.lng], { icon: customIcon }).addTo(map)
                         .bindPopup(popupContent);
 
+                    // リスト側の処理
                     var listItem = document.createElement('div');
                     listItem.className = 'list-item'; 
-                    listItem.innerHTML = '<div class="list-name">' + shop.name + '</div>' + 
-                                         '<div class="list-date">' + shop.date + '</div>';
+                    
+                    var badgeHtml = visitCount > 1 ? '<span class="badge">' + visitCount + '回</span>' : '';
+                    
+                    listItem.innerHTML = '<div class="list-name">' + shop.name + badgeHtml + '</div>' + 
+                                         '<div class="list-date">最終訪問: ' + latestVisit.date + '</div>';
 
                     listItem.addEventListener('click', function() {
                         map.flyTo([shop.lat, shop.lng], 14, { duration: 1.5 });
                         marker.openPopup();
 
-                        // ★追加：スマホ画面でリストから選んだら、自動でリストを閉じる
                         if (window.innerWidth <= 768) {
                             listContainer.classList.remove('active');
                             toggleBtn.textContent = 'リストを表示 📝';

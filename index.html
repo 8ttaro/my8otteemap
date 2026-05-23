@@ -25,20 +25,30 @@
             z-index: 1000; 
         }
         
-        /* ★地図の割合を変更（flex: 2 にして画面の2/3を使う） */
-        #map { 
-            flex: 2; 
-            width: 100%; 
+        /* ★追加：地図とリストを横並びにするための親枠 */
+        #content-wrap {
+            display: flex;
+            flex: 1; /* h2の下の残りの画面をすべて使う */
+            width: 100%;
+            flex-direction: row; /* 左から右へ横並び */
         }
 
-        /* ★ここから追加：画面下部のリスト用デザイン */
+        /* ★左側のリスト */
         #list-container {
-            flex: 1; /* 残りの1/3を使う */
-            width: 100%;
-            overflow-y: auto; /* 縦にスクロールできるようにする */
+            width: 300px; /* パソコン画面ではリストの幅を300pxに固定 */
+            height: 100%;
+            overflow-y: auto; 
             background-color: #f9f9f9;
-            border-top: 1px solid #ccc;
+            border-right: 1px solid #ccc; /* 境界線を上にあったものを右に変更 */
         }
+
+        /* ★右側の地図 */
+        #map { 
+            flex: 1; /* 残りの横幅をすべて地図に使う */
+            height: 100%; 
+        }
+
+        /* リストの中身のデザイン */
         .list-item {
             padding: 15px;
             border-bottom: 1px solid #eee;
@@ -48,7 +58,7 @@
             align-items: center;
         }
         .list-item:hover {
-            background-color: #eef; /* タップしたときのフィードバック色 */
+            background-color: #eef; 
         }
         .list-date {
             font-size: 12px;
@@ -59,13 +69,28 @@
             font-weight: bold;
             color: #333;
         }
+
+        /* ★レスポンシブの魔法：画面幅が768px（スマホサイズ）以下のときだけ発動するルール */
+        @media (max-width: 768px) {
+            #content-wrap {
+                /* 横並びをやめて、縦並びにする（さらに reverse で地図を上、リストを下にする） */
+                flex-direction: column-reverse; 
+            }
+            #list-container {
+                width: 100%; /* スマホではリストを横幅いっぱいに戻す */
+                border-right: none;
+                border-top: 1px solid #ccc;
+            }
+        }
     </style>
 </head>
 <body>
     <h2>ぼくのコーヒー地図 by 8ttaro</h2>
     
-    <div id="map"></div>
-    <div id="list-container"></div>
+    <div id="content-wrap">
+        <div id="list-container"></div>
+        <div id="map"></div>
+    </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
@@ -73,27 +98,10 @@
         var map = L.map('map').setView([36.2048, 138.2529], 5);
 
         // 2. 地図の画像を読み込む
-        
-        // CARTO Voyager
-        // L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {attribution: '&copy; OpenStreetMap &copy; CARTO' }).addTo(map);
-
-        // 白基調
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution: '&copy; OpenStreetMap &copy; CARTO' }).addTo(map);
 
-        // 黒基調
-        // L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {attribution: '&copy; OpenStreetMap &copy; CARTO' }).addTo(map);
-
-        // ナショナルジオグラフィック風
-        // L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}', {attribution: 'Tiles &copy; Esri &mdash; National Geographic, Esri, DeLorme, NAVTEQ, UNEP-WCMC, USGS, NASA, ESA, METI, NRCAN, GEBCO, NOAA, iPC'}).addTo(map);
-
-        // 国土地理院航空写真
-        // L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg', {attribution: '&copy; 国土地理院'}).addTo(map);
-        
-        // アウトドア仕様
-        // L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors, SRTM | &copy; OpenTopoMap'}).addTo(map);
-
         // 3. カスタムピンのデザイン（SVG）を作成
-        var pinColor = '#8B4513'; // サドルブラウン
+        var pinColor = '#8B4513'; 
         
         var pinSvg = `
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="30" height="45">
@@ -113,15 +121,13 @@
             .then(response => response.json())
             .then(data => {
                 
-                // ★追加：データを日付（date）の古い順（過去→現在）に並び替える
+                // データを日付（date）の古い順に並び替える
                 data.sort(function(a, b) {
                     return new Date(a.date) - new Date(b.date);
                 });
 
-                // リストを入れる箱（HTML）を取得
                 var listContainer = document.getElementById('list-container');
 
-                // データを1件ずつ処理する
                 data.forEach(shop => {
                     // --- 地図側の処理 ---
                     var popupContent = '<b>' + shop.name + '</b><br>' +
@@ -133,24 +139,21 @@
                         .bindPopup(popupContent);
 
                     // --- リスト側の処理 ---
-                    // HTMLの要素（div）を新しく作る
                     var listItem = document.createElement('div');
-                    listItem.className = 'list-item'; // CSSのデザインを適用
+                    listItem.className = 'list-item'; 
                     listItem.innerHTML = '<div class="list-name">' + shop.name + '</div>' + 
                                          '<div class="list-date">' + shop.date + '</div>';
 
-                    // ★連動機能：リストをタップしたときの動きを設定
+                    // 連動機能
                     listItem.addEventListener('click', function() {
-                        // 地図をそのピンの場所までスーッと移動させる（ズームレベル14）
                         map.flyTo([shop.lat, shop.lng], 14, { duration: 1.5 });
-                        // そのピンのポップアップを開く
                         marker.openPopup();
                     });
 
-                    // 作ったリスト要素を、画面下部の箱に追加する
                     listContainer.appendChild(listItem);
                 });
             })
             .catch(error => console.error('データの読み込みに失敗しました:', error));
-    </script> </body>
+    </script> 
+</body>
 </html>

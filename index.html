@@ -13,6 +13,7 @@
             flex-direction: column; 
             height: 100vh; 
             font-family: sans-serif;
+            overflow: hidden; /* 画面全体の余計なスクロールを防止 */
         }
         h2 { 
             margin: 0; 
@@ -25,30 +26,27 @@
             z-index: 1000; 
         }
         
-        /* ★追加：地図とリストを横並びにするための親枠 */
         #content-wrap {
             display: flex;
-            flex: 1; /* h2の下の残りの画面をすべて使う */
+            flex: 1; 
             width: 100%;
-            flex-direction: row; /* 左から右へ横並び */
+            flex-direction: row; 
+            min-height: 0; /* これがFlexboxスクロール問題の解決策 */
         }
 
-        /* ★左側のリスト */
         #list-container {
-            width: 300px; /* パソコン画面ではリストの幅を300pxに固定 */
+            width: 300px; 
             height: 100%;
             overflow-y: auto; 
             background-color: #f9f9f9;
-            border-right: 1px solid #ccc; /* 境界線を上にあったものを右に変更 */
+            border-right: 1px solid #ccc; 
         }
 
-        /* ★右側の地図 */
         #map { 
-            flex: 1; /* 残りの横幅をすべて地図に使う */
+            flex: 1; 
             height: 100%; 
         }
 
-        /* リストの中身のデザイン */
         .list-item {
             padding: 15px;
             border-bottom: 1px solid #eee;
@@ -70,25 +68,49 @@
             color: #333;
         }
 
-        /* ★レスポンシブの魔法：画面幅が768px（スマホサイズ）以下のときだけ発動するルール */
+        /* ★スマホ専用ボタンの基本デザイン（PCでは非表示） */
+        #toggle-list-btn {
+            display: none; 
+        }
+
+        /* ★レスポンシブの魔法：スマホ向けのレイアウト */
         @media (max-width: 768px) {
             #content-wrap {
-                /* 横並びをやめて、縦並びにする（さらに reverse で地図を上、リストを下にする） */
-                flex-direction: column-reverse; 
+                flex-direction: column-reverse; /* 地図が上、リストが下 */
             }
             #list-container {
-                width: 100%; /* スマホではリストを横幅いっぱいに戻す */
+                width: 100%; 
+                flex: 0 0 45%; /* リストを表示する時は画面の45%を使う */
                 border-right: none;
                 border-top: 1px solid #ccc;
-                /* ↓ここを追加：高さをコンテンツ量依存ではなく、割合で指定する */
-                flex: 1; /* リストの割合を1に設定 */
-                height: auto; /* パソコン用のheight: 100%を一度リセット */
+                display: none; /* スマホの初期状態は非表示（地図を全画面に） */
+                min-height: 0; /* ★スマホでのスクロールバグを直す魔法 */
             }
-            /* ↓ここを追加 */
+            #list-container.active {
+                display: block; /* ボタンを押したら表示される */
+            }
             #map {
-                flex: 2; /* 地図の割合を2に設定（画面の約2/3を使う） */
-                height: auto; /* パソコン用のheight: 100%を一度リセット */
-                min-height: 200px; /* 最低限の地図高さを確保 (Leaflet対策) */
+                flex: 1; /* 残りの高さをすべて使う */
+                min-height: 0;
+            }
+
+            /* ★スマホ専用ボタンを画面下部に浮かせる */
+            #toggle-list-btn {
+                display: block;
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 2000;
+                background-color: #8B4513;
+                color: white;
+                border: none;
+                padding: 12px 24px;
+                border-radius: 30px;
+                font-size: 14px;
+                font-weight: bold;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+                cursor: pointer;
             }
         }
     </style>
@@ -101,17 +123,15 @@
         <div id="map"></div>
     </div>
 
+    <button id="toggle-list-btn">リストを表示 📝</button>
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // 1. 地図の初期設定
         var map = L.map('map').setView([36.2048, 138.2529], 5);
 
-        // 2. 地図の画像を読み込む
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution: '&copy; OpenStreetMap &copy; CARTO' }).addTo(map);
 
-        // 3. カスタムピンのデザイン（SVG）を作成
         var pinColor = '#8B4513'; 
-        
         var pinSvg = `
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="30" height="45">
                 <path fill="${pinColor}" stroke="#ffffff" stroke-width="2" d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24C24 5.4 18.6 0 12 0zm0 17c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5z"/>
@@ -125,20 +145,32 @@
             popupAnchor: [0, -45] 
         });
 
-        // 4. shops.json のデータを読み込んで処理する
+        // ★追加：スマホ用ボタンの動作設定
+        var toggleBtn = document.getElementById('toggle-list-btn');
+        var listContainer = document.getElementById('list-container');
+
+        toggleBtn.addEventListener('click', function() {
+            listContainer.classList.toggle('active'); // 表示/非表示を切り替え
+            
+            if (listContainer.classList.contains('active')) {
+                toggleBtn.textContent = '地図のみ表示 🗺️';
+            } else {
+                toggleBtn.textContent = 'リストを表示 📝';
+            }
+            
+            // 地図のサイズが変わったことをLeafletに教えて再計算させる（これがないと地図がバグります）
+            setTimeout(function() { map.invalidateSize(); }, 100);
+        });
+
         fetch('shops.json')
             .then(response => response.json())
             .then(data => {
                 
-                // データを日付（date）の古い順に並び替える
                 data.sort(function(a, b) {
                     return new Date(a.date) - new Date(b.date);
                 });
 
-                var listContainer = document.getElementById('list-container');
-
                 data.forEach(shop => {
-                    // --- 地図側の処理 ---
                     var popupContent = '<b>' + shop.name + '</b><br>' +
                                        '<span style="color: #888; font-size: 12px;">📅 ' + shop.date + '</span><br>' +
                                        '☕️ ' + shop.drink + '（¥' + shop.price + '）<br>' +
@@ -147,16 +179,21 @@
                     var marker = L.marker([shop.lat, shop.lng], { icon: customIcon }).addTo(map)
                         .bindPopup(popupContent);
 
-                    // --- リスト側の処理 ---
                     var listItem = document.createElement('div');
                     listItem.className = 'list-item'; 
                     listItem.innerHTML = '<div class="list-name">' + shop.name + '</div>' + 
                                          '<div class="list-date">' + shop.date + '</div>';
 
-                    // 連動機能
                     listItem.addEventListener('click', function() {
                         map.flyTo([shop.lat, shop.lng], 14, { duration: 1.5 });
                         marker.openPopup();
+
+                        // ★追加：スマホ画面でリストから選んだら、自動でリストを閉じる
+                        if (window.innerWidth <= 768) {
+                            listContainer.classList.remove('active');
+                            toggleBtn.textContent = 'リストを表示 📝';
+                            setTimeout(function() { map.invalidateSize(); }, 100);
+                        }
                     });
 
                     listContainer.appendChild(listItem);

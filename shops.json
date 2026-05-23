@@ -34,5 +34,14 @@
     "drink": "エチオピア チレ",
     "price": 750,
     "comment": ""
+  },
+  {
+    "name": "AND COFFEE BREWERS",
+    "lat": 32.80188798041991, 
+    "lng": 130.70974684230697,
+    "date": "2026-03-07",
+    "drink": "ウガンダ ニヤビロンゴ",
+    "price": 500,
+    "comment": ""
   }
 ]

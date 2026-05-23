@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>My Coffee Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        /* 地図の高さを指定する（これがないと地図が潰れて見えません） */
+        #map { height: 600px; width: 100%; }
+    </style>
+</head>
+<body>
+    <h2>全国コーヒー屋巡りマップ</h2>
+    
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // 1. 地図の初期設定
+        var map = L.map('map').setView([36.2048, 138.2529], 5);
+
+        // 2. 地図の画像を読み込む
+        
+        // CARTO Voyager
+        // L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {attribution: '&copy; OpenStreetMap &copy; CARTO' }).addTo(map);
+
+        // 白基調
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution: '&copy; OpenStreetMap &copy; CARTO' }).addTo(map);
+
+        // 黒基調
+        // L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {attribution: '&copy; OpenStreetMap &copy; CARTO' }).addTo(map);
+
+        // ナショナルジオグラフィック風
+        // L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}', {attribution: 'Tiles &copy; Esri &mdash; National Geographic, Esri, DeLorme, NAVTEQ, UNEP-WCMC, USGS, NASA, ESA, METI, NRCAN, GEBCO, NOAA, iPC'}).addTo(map);
+
+        // 国土地理院航空写真
+        // L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg', {attribution: '&copy; 国土地理院'}).addTo(map);
+        
+        // アウトドア仕様
+        // L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors, SRTM | &copy; OpenTopoMap'}).addTo(map);
+
+        // 3. カスタムピンのデザイン（SVG）を作成
+        var pinColor = '#8B4513'; // サドルブラウン
+        
+        var pinSvg = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="30" height="45">
+                <path fill="${pinColor}" stroke="#ffffff" stroke-width="2" d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24C24 5.4 18.6 0 12 0zm0 17c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5z"/>
+            </svg>`;
+
+        var customIcon = L.divIcon({
+            html: pinSvg,
+            className: '', 
+            iconSize: [30, 45], 
+            iconAnchor: [15, 45], 
+            popupAnchor: [0, -45] 
+        });
+
+        // 4. shops.json のデータを読み込んで、カスタムピンを打つ
+        fetch('shops.json')
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(shop => {
+                    var popupContent = '<b>' + shop.name + '</b><br>' +
+                                       '<span style="color: #888; font-size: 12px;">📅 ' + shop.date + '</span><br>' +
+                                       '☕️ ' + shop.drink + '（¥' + shop.price + '）<br>' +
+                                       '<small style="color: #555;">' + shop.comment + '</small>';
+                    L.marker([shop.lat, shop.lng], { icon: customIcon }).addTo(map)
+                        .bindPopup(popupContent);
+                });
+            })
+            .catch(error => console.error('データの読み込みに失敗しました:', error));
+    </script> </body>
+</html>

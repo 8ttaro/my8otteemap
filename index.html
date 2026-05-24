@@ -253,7 +253,6 @@
         var map = L.map('map').setView([36.2048, 138.2529], 5);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution: '&copy; OpenStreetMap &copy; CARTO' }).addTo(map);
 
-        // ★切り替え時にピンを一度全部消せるように、グループ枠を作っておく
         var markerGroup = L.layerGroup().addTo(map);
 
         var toggleBtn = document.getElementById('toggle-list-btn');
@@ -276,75 +275,66 @@
         statBtn.addEventListener('click', function() { statModal.style.display = 'flex'; });
         closeStatBtn.addEventListener('click', function() { statModal.style.display = 'none'; });
 
-        // ★追加：年ごとのピンの色を設定する関数
         function getYearColor(year) {
-            if (year === '2026') return '#8B4513'; // 2026年：サドルブラウン
-            if (year === '2025') return '#D35400'; // 2025年：オレンジ
-            if (year === '2024') return '#2980B9'; // 2024年：ブルー
-            if (year === '2023') return '#27AE60'; // 2023年：グリーン
-            return '#7F8C8D';                     // その他：グレー
+            if (year === '2026') return '#8B4513'; 
+            if (year === '2025') return '#D35400'; 
+            if (year === '2024') return '#2980B9'; 
+            if (year === '2023') return '#27AE60'; 
+            return '#7F8C8D';                     
         }
 
         fetch('shops.json')
             .then(response => response.json())
             .then(flatData => {
                 
-                // 1. JSON内にあるすべての「年」を自動で集める処理
                 var years = ['all'];
                 flatData.forEach(function(item) {
-                    var y = item.date.split('/')[0]; // 「2026/03/07」から「2026」を取り出す
+                    // ★修正箇所1：最初の4文字（年）だけを切り取る
+                    var y = item.date.substring(0, 4); 
                     if (years.indexOf(y) === -1) {
                         years.push(y);
                     }
                 });
 
-                // 年を新しい順（2026 -> 2025 -> 2024...）に並び替える（allは先頭）
                 years.splice(years.indexOf('all'), 1);
                 years.sort((a, b) => b - a);
                 years.unshift('all');
 
-                // 2. 年別切り替えボタンを画面に自動生成する
                 var filterWrap = document.getElementById('filter-wrap');
                 years.forEach(function(year) {
                     var btn = document.createElement('button');
                     btn.className = 'filter-btn';
                     if (year === 'all') {
                         btn.textContent = 'すべて';
-                        btn.classList.add('active'); // 最初は「すべて」を選択状態に
+                        btn.classList.add('active'); 
                     } else {
                         btn.textContent = year + '年';
                     }
 
-                    // ボタンを押した時の切り替えイベント
                     btn.addEventListener('click', function() {
                         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
                         btn.classList.add('active');
-                        // 選択された年で画面を再描画する
                         updateDisplay(flatData, year);
                     });
                     filterWrap.appendChild(btn);
                 });
 
-                // 初期状態（すべて）で一度画面を描画
                 updateDisplay(flatData, 'all');
             })
             .catch(error => console.error('データの読み込みに失敗しました:', error));
 
 
-        // ★追加：選択された年（targetYear）のデータだけを抽出して画面を更新する中心関数
         function updateDisplay(flatData, targetYear) {
-            // 地図のピンとリストの中身を一度リセット
             markerGroup.clearLayers();
             var listContent = document.getElementById('list-content');
             listContent.innerHTML = '';
 
-            // 指定された年のデータだけを抜き出す
             var filteredFlatData = flatData.filter(function(item) {
-                var y = item.date.split('/')[0];
+                // ★修正箇所2：最初の4文字（年）だけを切り取る
+                var y = item.date.substring(0, 4);
                 return targetYear === 'all' || y === targetYear;
             });
 
-            // 店名ごとにデータをまとめる
             var groupedShops = {};
             var totalMoney = 0;
 
@@ -371,29 +361,26 @@
 
             var data = Object.values(groupedShops);
 
-            // 統計ダッシュボードの数値を書き換え
             var periodText = targetYear === 'all' ? '全期間' : targetYear + '年';
             document.getElementById('stat-title').textContent = 'コーヒー活動記録 (' + periodText + ')';
             document.getElementById('stat-cups').textContent = filteredFlatData.length + ' 杯';
             document.getElementById('stat-shops').textContent = data.length + ' 店舗';
             document.getElementById('stat-money').textContent = '¥ ' + totalMoney.toLocaleString();
 
-            // お店を最新の訪問日順に並び替え
             data.sort(function(a, b) {
                 var latestA = new Date(Math.max(...a.visits.map(v => new Date(v.date))));
                 var latestB = new Date(Math.max(...b.visits.map(v => new Date(v.date))));
                 return latestA - latestB; 
             });
 
-            // ピンとリストを生成
             data.forEach(shop => {
                 shop.visits.sort((a, b) => new Date(b.date) - new Date(a.date));
                 
                 var visitCount = shop.visits.length;
                 var latestVisit = shop.visits[0]; 
 
-                // ★ここが進化：一番新しい訪問日に応じて、ピンのカラーを動的に決定！
-                var visitYear = latestVisit.date.split('/')[0];
+                // ★修正箇所3：最初の4文字（年）だけを切り取る
+                var visitYear = latestVisit.date.substring(0, 4);
                 var pinColor = getYearColor(visitYear);
 
                 var badgeSvg = '';
@@ -430,11 +417,9 @@
                 });
                 popupContent += '</div>';
                 
-                // 地図に直接貼るのではなく、グループ枠（markerGroup）に足していく
                 var marker = L.marker([shop.lat, shop.lng], { icon: customIcon }).addTo(markerGroup)
                     .bindPopup(popupContent);
 
-                // リストアイテムの生成
                 var listItem = document.createElement('div');
                 listItem.className = 'list-item'; 
                 var badgeHtml = visitCount > 1 ? '<span class="badge">' + visitCount + '回</span>' : '';
@@ -456,6 +441,6 @@
                 listContent.appendChild(listItem);
             });
         }
-    </script> 
+    </script>
 </body>
 </html>

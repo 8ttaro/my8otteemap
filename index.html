@@ -24,7 +24,7 @@
             text-align: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             z-index: 1000; 
-            position: relative; /* ボタンの基準位置にするため */
+            position: relative; 
         }
         
         #content-wrap {
@@ -35,12 +35,51 @@
             min-height: 0; 
         }
 
+        /* リスト全体の枠（上部にフィルター、下部に中身を縦並びにする） */
         #list-container {
             width: 300px; 
             height: 100%;
-            overflow-y: auto; 
+            display: flex;
+            flex-direction: column;
             background-color: #f9f9f9;
             border-right: 1px solid #ccc; 
+        }
+
+        /* ★追加：年別切り替えボタンのコンテナ */
+        .filter-wrap {
+            padding: 10px;
+            background-color: #eee;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            gap: 6px;
+            overflow-x: auto; /* ボタンが増えたら横スクロール可能に */
+            flex-shrink: 0; /* 縦に潰れないように固定 */
+        }
+        /* 横スクロールバーをすっきり隠すか薄くする設定 */
+        .filter-wrap::-webkit-scrollbar { height: 4px; }
+        .filter-wrap::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
+
+        .filter-btn {
+            background-color: white;
+            border: 1px solid #ccc;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            white-space: nowrap; /* 改行防止 */
+            transition: all 0.2s;
+        }
+        .filter-btn.active {
+            background-color: #333;
+            color: white;
+            border-color: #333;
+        }
+
+        /* リストのスクロールエリア */
+        #list-content {
+            flex: 1;
+            overflow-y: auto;
         }
 
         #map { 
@@ -91,21 +130,24 @@
 
         #toggle-list-btn { display: none; }
 
-        /* ==========================================
-           ★追加：ダッシュボード（統計画面）のデザイン
-           ========================================== */
         #stat-btn {
             position: absolute;
             right: 15px;
             top: calc(10px + env(safe-area-inset-top));
             background: none;
             border: none;
-            font-size: 20px;
             cursor: pointer;
+            padding: 0;
+            display: flex; 
+            align-items: center;
+            justify-content: center;
+            opacity: 0.9; 
+            transition: opacity 0.2s; 
         }
+        #stat-btn:active { opacity: 0.5; }
 
         #stat-modal {
-            display: none; /* 初期状態は非表示 */
+            display: none; 
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0,0,0,0.6);
@@ -137,7 +179,6 @@
             font-weight: bold;
             margin-top: 10px;
         }
-        /* ========================================== */
 
         @media (max-width: 768px) {
             #content-wrap { flex-direction: column-reverse; }
@@ -182,7 +223,10 @@
     </h2>
     
     <div id="content-wrap">
-        <div id="list-container"></div>
+        <div id="list-container">
+            <div class="filter-wrap" id="filter-wrap"></div>
+            <div id="list-content"></div>
+        </div>
         <div id="map"></div>
     </div>
 
@@ -190,7 +234,7 @@
 
     <div id="stat-modal">
         <div class="stat-box">
-            <h3>コーヒー活動記録</h3>
+            <h3 id="stat-title">コーヒー活動記録</h3>
             <div class="stat-label">総来店回数 (飲んだ杯数)</div>
             <div class="stat-number" id="stat-cups">0 杯</div>
             
@@ -209,6 +253,9 @@
         var map = L.map('map').setView([36.2048, 138.2529], 5);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution: '&copy; OpenStreetMap &copy; CARTO' }).addTo(map);
 
+        // ★切り替え時にピンを一度全部消せるように、グループ枠を作っておく
+        var markerGroup = L.layerGroup().addTo(map);
+
         var toggleBtn = document.getElementById('toggle-list-btn');
         var listContainer = document.getElementById('list-container');
 
@@ -222,132 +269,193 @@
             setTimeout(function() { map.invalidateSize(); }, 100);
         });
 
-        // ★追加：統計モーダルの開閉処理
         var statBtn = document.getElementById('stat-btn');
         var statModal = document.getElementById('stat-modal');
         var closeStatBtn = document.getElementById('close-stat-btn');
 
-        statBtn.addEventListener('click', function() {
-            statModal.style.display = 'flex';
-        });
-        closeStatBtn.addEventListener('click', function() {
-            statModal.style.display = 'none';
-        });
+        statBtn.addEventListener('click', function() { statModal.style.display = 'flex'; });
+        closeStatBtn.addEventListener('click', function() { statModal.style.display = 'none'; });
+
+        // ★追加：年ごとのピンの色を設定する関数
+        function getYearColor(year) {
+            if (year === '2026') return '#8B4513'; // 2026年：サドルブラウン
+            if (year === '2025') return '#D35400'; // 2025年：オレンジ
+            if (year === '2024') return '#2980B9'; // 2024年：ブルー
+            if (year === '2023') return '#27AE60'; // 2023年：グリーン
+            return '#7F8C8D';                     // その他：グレー
+        }
 
         fetch('shops.json')
             .then(response => response.json())
             .then(flatData => {
                 
-                var groupedShops = {};
-                var totalMoney = 0; // ★追加：総額を計算する用の変数
-
+                // 1. JSON内にあるすべての「年」を自動で集める処理
+                var years = ['all'];
                 flatData.forEach(function(item) {
-                    if (!groupedShops[item.name]) {
-                        groupedShops[item.name] = {
-                            name: item.name,
-                            lat: item.lat,
-                            lng: item.lng,
-                            visits: [] 
-                        };
-                    }
-                    groupedShops[item.name].visits.push({
-                        date: item.date,
-                        drink: item.drink,
-                        price: item.price,
-                        comment: item.comment
-                    });
-
-                    // ★追加：金額をどんどん足していく処理
-                    // （※priceが空欄のデータがあってもエラーにならないように対策）
-                    if(item.price && !isNaN(item.price)) {
-                        totalMoney += Number(item.price);
+                    var y = item.date.split('/')[0]; // 「2026/03/07」から「2026」を取り出す
+                    if (years.indexOf(y) === -1) {
+                        years.push(y);
                     }
                 });
 
-                var data = Object.values(groupedShops);
+                // 年を新しい順（2026 -> 2025 -> 2024...）に並び替える（allは先頭）
+                years.splice(years.indexOf('all'), 1);
+                years.sort((a, b) => b - a);
+                years.unshift('all');
 
-                // ==========================================
-                // ★追加：計算した統計データをHTMLに書き込む
-                // ==========================================
-                document.getElementById('stat-cups').textContent = flatData.length + ' 杯';
-                document.getElementById('stat-shops').textContent = data.length + ' 店舗';
-                document.getElementById('stat-money').textContent = '¥ ' + totalMoney.toLocaleString(); // カンマ区切りにする
-                // ==========================================
-
-
-                data.sort(function(a, b) {
-                    var latestA = new Date(Math.max(...a.visits.map(v => new Date(v.date))));
-                    var latestB = new Date(Math.max(...b.visits.map(v => new Date(v.date))));
-                    return latestA - latestB; 
-                });
-
-                data.forEach(shop => {
-                    shop.visits.sort((a, b) => new Date(b.date) - new Date(a.date));
-                    
-                    var visitCount = shop.visits.length;
-                    var latestVisit = shop.visits[0]; 
-
-                    var pinColor = '#8B4513'; 
-                    var badgeSvg = '';
-                    if (visitCount > 1) {
-                        badgeSvg = `
-                            <circle cx="22" cy="6" r="8" fill="#e74c3c" stroke="#ffffff" stroke-width="2" />
-                            <text x="22" y="9" font-family="sans-serif" font-size="9" font-weight="bold" fill="white" text-anchor="middle">${visitCount}</text>
-                        `;
+                // 2. 年別切り替えボタンを画面に自動生成する
+                var filterWrap = document.getElementById('filter-wrap');
+                years.forEach(function(year) {
+                    var btn = document.createElement('button');
+                    btn.className = 'filter-btn';
+                    if (year === 'all') {
+                        btn.textContent = 'すべて';
+                        btn.classList.add('active'); // 最初は「すべて」を選択状態に
+                    } else {
+                        btn.textContent = year + '年';
                     }
-                    
-                    var pinSvg = `
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="30" height="45" style="overflow: visible;">
-                            <path fill="${pinColor}" stroke="#ffffff" stroke-width="2" d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24C24 5.4 18.6 0 12 0zm0 17c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5z"/>
-                            ${badgeSvg}
-                        </svg>`;
 
-                    var customIcon = L.divIcon({
-                        html: pinSvg,
-                        className: '', 
-                        iconSize: [30, 45], 
-                        iconAnchor: [15, 45], 
-                        popupAnchor: [0, -45] 
+                    // ボタンを押した時の切り替えイベント
+                    btn.addEventListener('click', function() {
+                        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        // 選択された年で画面を再描画する
+                        updateDisplay(flatData, year);
                     });
-
-                    var popupContent = '<b style="font-size:15px;">' + shop.name + '</b>';
-                    popupContent += '<div class="popup-history">';
-                    
-                    shop.visits.forEach(visit => {
-                        popupContent += '<div class="history-item">';
-                        popupContent += '<span style="color: #888; font-size: 12px;">📅 ' + visit.date + '</span><br>';
-                        popupContent += '☕️ ' + visit.drink + '（¥' + visit.price + '）<br>';
-                        popupContent += '<small style="color: #555;">' + visit.comment + '</small>';
-                        popupContent += '</div>';
-                    });
-                    popupContent += '</div>';
-                    
-                    var marker = L.marker([shop.lat, shop.lng], { icon: customIcon }).addTo(map)
-                        .bindPopup(popupContent);
-
-                    var listItem = document.createElement('div');
-                    listItem.className = 'list-item'; 
-                    
-                    var badgeHtml = visitCount > 1 ? '<span class="badge">' + visitCount + '回</span>' : '';
-                    
-                    listItem.innerHTML = '<div class="list-name">' + shop.name + badgeHtml + '</div>' + 
-                                         '<div class="list-date">最終訪問: ' + latestVisit.date + '</div>';
-
-                    listItem.addEventListener('click', function() {
-                        map.flyTo([shop.lat, shop.lng], 14, { duration: 1.5 });
-                        marker.openPopup();
-
-                        if (window.innerWidth <= 768) {
-                            listContainer.classList.remove('active');
-                            toggleBtn.textContent = 'リストを表示 📝';
-                            setTimeout(function() { map.invalidateSize(); }, 100);
-                        }
-                    });
-
-                    listContainer.appendChild(listItem);
+                    filterWrap.appendChild(btn);
                 });
+
+                // 初期状態（すべて）で一度画面を描画
+                updateDisplay(flatData, 'all');
             })
             .catch(error => console.error('データの読み込みに失敗しました:', error));
+
+
+        // ★追加：選択された年（targetYear）のデータだけを抽出して画面を更新する中心関数
+        function updateDisplay(flatData, targetYear) {
+            // 地図のピンとリストの中身を一度リセット
+            markerGroup.clearLayers();
+            var listContent = document.getElementById('list-content');
+            listContent.innerHTML = '';
+
+            // 指定された年のデータだけを抜き出す
+            var filteredFlatData = flatData.filter(function(item) {
+                var y = item.date.split('/')[0];
+                return targetYear === 'all' || y === targetYear;
+            });
+
+            // 店名ごとにデータをまとめる
+            var groupedShops = {};
+            var totalMoney = 0;
+
+            filteredFlatData.forEach(function(item) {
+                if (!groupedShops[item.name]) {
+                    groupedShops[item.name] = {
+                        name: item.name,
+                        lat: item.lat,
+                        lng: item.lng,
+                        visits: [] 
+                    };
+                }
+                groupedShops[item.name].visits.push({
+                    date: item.date,
+                    drink: item.drink,
+                    price: item.price,
+                    comment: item.comment
+                });
+
+                if(item.price && !isNaN(item.price)) {
+                    totalMoney += Number(item.price);
+                }
+            });
+
+            var data = Object.values(groupedShops);
+
+            // 統計ダッシュボードの数値を書き換え
+            var periodText = targetYear === 'all' ? '全期間' : targetYear + '年';
+            document.getElementById('stat-title').textContent = 'コーヒー活動記録 (' + periodText + ')';
+            document.getElementById('stat-cups').textContent = filteredFlatData.length + ' 杯';
+            document.getElementById('stat-shops').textContent = data.length + ' 店舗';
+            document.getElementById('stat-money').textContent = '¥ ' + totalMoney.toLocaleString();
+
+            // お店を最新の訪問日順に並び替え
+            data.sort(function(a, b) {
+                var latestA = new Date(Math.max(...a.visits.map(v => new Date(v.date))));
+                var latestB = new Date(Math.max(...b.visits.map(v => new Date(v.date))));
+                return latestA - latestB; 
+            });
+
+            // ピンとリストを生成
+            data.forEach(shop => {
+                shop.visits.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                var visitCount = shop.visits.length;
+                var latestVisit = shop.visits[0]; 
+
+                // ★ここが進化：一番新しい訪問日に応じて、ピンのカラーを動的に決定！
+                var visitYear = latestVisit.date.split('/')[0];
+                var pinColor = getYearColor(visitYear);
+
+                var badgeSvg = '';
+                if (visitCount > 1) {
+                    badgeSvg = `
+                        <circle cx="22" cy="6" r="8" fill="#e74c3c" stroke="#ffffff" stroke-width="2" />
+                        <text x="22" y="9" font-family="sans-serif" font-size="9" font-weight="bold" fill="white" text-anchor="middle">${visitCount}</text>
+                    `;
+                }
+                
+                var pinSvg = `
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="30" height="45" style="overflow: visible;">
+                        <path fill="${pinColor}" stroke="#ffffff" stroke-width="2" d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24C24 5.4 18.6 0 12 0zm0 17c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5z"/>
+                        ${badgeSvg}
+                    </svg>`;
+
+                var customIcon = L.divIcon({
+                    html: pinSvg,
+                    className: '', 
+                    iconSize: [30, 45], 
+                    iconAnchor: [15, 45], 
+                    popupAnchor: [0, -45] 
+                });
+
+                var popupContent = '<b style="font-size:15px;">' + shop.name + '</b>';
+                popupContent += '<div class="popup-history">';
+                
+                shop.visits.forEach(visit => {
+                    popupContent += '<div class="history-item">';
+                    popupContent += '<span style="color: #888; font-size: 12px;">📅 ' + visit.date + '</span><br>';
+                    popupContent += '☕️ ' + visit.drink + '（¥' + visit.price + '）<br>';
+                    popupContent += '<small style="color: #555;">' + visit.comment + '</small>';
+                    popupContent += '</div>';
+                });
+                popupContent += '</div>';
+                
+                // 地図に直接貼るのではなく、グループ枠（markerGroup）に足していく
+                var marker = L.marker([shop.lat, shop.lng], { icon: customIcon }).addTo(markerGroup)
+                    .bindPopup(popupContent);
+
+                // リストアイテムの生成
+                var listItem = document.createElement('div');
+                listItem.className = 'list-item'; 
+                var badgeHtml = visitCount > 1 ? '<span class="badge">' + visitCount + '回</span>' : '';
+                
+                listItem.innerHTML = '<div class="list-name">' + shop.name + badgeHtml + '</div>' + 
+                                     '<div class="list-date">最終訪問: ' + latestVisit.date + '</div>';
+
+                listItem.addEventListener('click', function() {
+                    map.flyTo([shop.lat, shop.lng], 14, { duration: 1.5 });
+                    marker.openPopup();
+
+                    if (window.innerWidth <= 768) {
+                        listContainer.classList.remove('active');
+                        toggleBtn.textContent = 'リストを表示 📝';
+                        setTimeout(function() { map.invalidateSize(); }, 100);
+                    }
+                });
+
+                listContent.appendChild(listItem);
+            });
+        }
     </script> 
 </body>
 </html>

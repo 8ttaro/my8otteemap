@@ -295,5 +295,122 @@
     "drink": "コナブレンド",
     "price": 610,
     "comment": ""
+  },
+  {
+    "name": "新城テラス（武蔵新城）",
+    "lat": 35.58805454283144, 
+    "lng": 139.63060532979796, 
+    "date": "2026-03-31",
+    "drink": "（浅煎りコーヒー）",
+    "price": 550,
+    "comment": ""
+  },
+  {
+    "name": "FUGLEN COFFEE ROASTERS（登戸）",
+    "lat": 35.62144332266019, 
+    "lng": 139.57184077607485,
+    "date": "2026-04-04",
+    "drink": "ブラジル",
+    "price": 480,
+    "comment": ""
+  },
+  {
+    "name": "Light Up Coffee（下北沢）",
+    "lat": 35.65819,
+    "lng": 139.66257,
+    "date": "2026-04-05",
+    "drink": "コスタリカ ラスコリナス",
+    "price": 650,
+    "comment": ""
+  },    
+  {
+    "name": "BEASTY COFFEE（富ヶ谷）",
+    "lat": 35.66608566274856, 
+    "lng": 139.69195820845002,
+    "date": "2026-04-05",
+    "drink": "コロンビア・エチオピア・ケニア ブレンド",
+    "price": null,
+    "comment": ""
+  },
+  {
+    "name": "MYS,COFFEE（宇都宮）",
+    "lat": 36.557546362455085, 
+    "lng": 139.88337606651473, 
+    "date": "2026-04-25",
+    "drink": "エチオピア ウォルカ",
+    "price": 700,
+    "comment": ""
+  },
+  {
+    "name": "SLOW JET COFFEE（北千住）",
+    "lat": 35.743356294725494, 
+    "lng": 139.80540226540197,
+    "date": "2026-04-29",
+    "drink": "コスタリカ",
+    "price": 600,
+    "comment": ""
+  },
+  {
+    "name": "LUSH-COFFEE ROASTER（北千住）",
+    "lat": 35.75059533167167, 
+    "lng": 139.80280588838642,
+    "date": "2026-04-29",
+    "drink": "東ティモール アイレウ県",
+    "price": 650,
+    "comment": ""
+  },
+  {
+    "name": "PAVEMENT COFFEE ROASTERY（東武宇都宮）",
+    "lat": 36.55646630332723, 
+    "lng": 139.87864468165134, 
+    "date": "2026-05-05",
+    "drink": "コロンビア ラスペリタス",
+    "price": 700,
+    "comment": ""
+  },
+  {
+    "name": "ASATTE COFFEE（宇都宮）",
+    "lat": 36.564528359543765, 
+    "lng": 139.88480256211477,
+    "date": "2026-05-06",
+    "drink": "エチオピア ウラガハワタ",
+    "price": 550,
+    "comment": ""
+  },
+  {
+    "name": "ISLAND STONE COFFEE ROASTERS（宇都宮）",
+    "lat": 36.55949726070263, 
+    "lng": 139.8998466596615,
+    "date": "2026-05-08",
+    "drink": "ルワンダ シンビ",
+    "price": 691,
+    "comment": ""
+  },
+  {
+    "name": "ISLAND STONE COFFEE ROASTERS（宇都宮）",
+    "lat": 36.55949726070263, 
+    "lng": 139.8998466596615,
+    "date": "2026-05-15",
+    "drink": "エチオピア チェルベサ",
+    "price": 691,
+    "comment": ""
+  },
+  {
+    "name": "PAVEMENT COFFEE ROASTERY（東武宇都宮）",
+    "lat": 36.55646630332723, 
+    "lng": 139.87864468165134, 
+    "date": "2026-05-16",
+    "drink": "エチオピア ボナ・ズリア・セダカ",
+    "price": 700,
+    "comment": ""
+  },
+  {
+    "name": "MOON DOGG ESPRESSO ROASTERS（宇都宮）",
+    "lat": 36.56034925590385, 
+    "lng": 139.8869352943262,
+    "date": "2026-05-17",
+    "drink": "ホンジュラス",
+    "price": 550,
+    "comment": ""
   }
 ]

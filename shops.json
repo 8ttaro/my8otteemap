@@ -151,5 +151,59 @@
     "drink": "（ドリップコーヒー）",
     "price": 500,
     "comment": ""
+  },
+  {
+    "name": "LEPO COFFEE STAND（用賀）",
+    "lat": 35.62827952155665, 
+    "lng": 139.63121399630137,
+    "date": "2026-02-14",
+    "drink": "エチオピア イルガチェフェ",
+    "price": 750,
+    "comment": ""
+  },
+  {
+    "name": "COMMON & CAFE COFFFEE ROASTERY（宇都宮）",
+    "lat": 36.868289750304974, 
+    "lng": 140.02653740127892,
+    "date": "2026-02-16",
+    "drink": "エチオピア グジ",
+    "price": 550,
+    "comment": ""
+  },
+  {
+    "name": "meguri coffee（日光）",
+    "lat": 36.75221058438374, 
+    "lng": 139.6070404233933,
+    "date": "2026-02-17",
+    "drink": "エチオピア コンゴ",
+    "price": 594,
+    "comment": ""
+  },
+  {
+    "name": "Jubilee Coffee & Roaster（目黒）",
+    "lat": 35.63573019969184, 
+    "lng": 139.72165902858944,
+    "date": "2026-02-19",
+    "drink": "ケニア",
+    "price": null,
+    "comment": ""
+  },
+  {
+    "name": "日升庵（つくば）",
+    "lat": 36.21242091493653, 
+    "lng": 140.09593702948675,
+    "date": "2026-02-22",
+    "drink": "（ブレンドコーヒー）",
+    "price": 550,
+    "comment": ""
+  },
+  {
+    "name": "Chapio Coffee Brewers（つくば）",
+    "lat": 36.0893184630991, 
+    "lng": 140.15262880313176,
+    "date": "2026-02-23",
+    "drink": "エチオピア",
+    "price": 650,
+    "comment": ""
   }
 ]

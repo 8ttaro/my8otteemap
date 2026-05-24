@@ -16,17 +16,66 @@
             overflow: hidden; 
             background-color: #f2f2f7; 
         }
-        h2 { 
-            margin: 0; 
-            padding: calc(15px + env(safe-area-inset-top)) 10px 15px 10px; 
-            font-size: 16px; 
-            background-color: #333; 
-            color: white; 
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            z-index: 1000; 
+
+        /* ★大幅変更：ヘッダーエリア（ポートフォリオ風カバー） */
+        header { 
             position: relative; 
+            /* iPhoneの安全領域を考慮した高さ計算 */
+            height: calc(130px + env(safe-area-inset-top)); 
+            /* ↓後ほどご自身で撮影した写真（ex: my-photo.jpg）に差し替え可能です */
+            background-image: url('../ASATTECOFFEE.JPG'); 
+            background-size: cover;
+            background-position: center;
+            color: white;
+            display: flex;
+            align-items: flex-end; /* 文字を写真の下側に配置 */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+            z-index: 1000; 
+            box-sizing: border-box;
+            padding: 0 20px 18px 20px;
         }
+
+        /* ★写真の上に重ねる暗めのフィルター（文字の視認性確保） */
+        .header-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.65) 100%);
+            z-index: 1;
+        }
+
+        /* タイトルとサブタイトルの配置枠 */
+        .header-content {
+            position: relative;
+            z-index: 2; /* フィルターより上に表示 */
+        }
+        
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        }
+
+        header p {
+            margin: 5px 0 0 0;
+            font-size: 12px;
+            opacity: 0.85;
+            letter-spacing: 0.5px;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+        }
+
+        /* ★統計ボタンの位置をヘッダーの右下に調整 */
+        #stat-btn {
+            position: absolute; 
+            right: 20px; 
+            bottom: 18px;
+            background: none; border: none; cursor: pointer; padding: 0;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 2;
+            opacity: 0.9; transition: opacity 0.2s, transform 0.2s; 
+        }
+        #stat-btn:active { opacity: 0.5; transform: scale(0.9); }
         
         #content-wrap {
             display: flex;
@@ -94,7 +143,6 @@
             height: 100%; 
         }
 
-        /* リストのカードデザイン */
         .list-item {
             background-color: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(10px);
@@ -146,13 +194,6 @@
         .history-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
 
         #toggle-list-btn { display: none; }
-        #stat-btn {
-            position: absolute; right: 15px; top: calc(10px + env(safe-area-inset-top));
-            background: none; border: none; cursor: pointer; padding: 0;
-            display: flex; align-items: center; justify-content: center;
-            opacity: 0.9; transition: opacity 0.2s, transform 0.2s; 
-        }
-        #stat-btn:active { opacity: 0.5; transform: scale(0.9); }
 
         /* 統計モーダル */
         #stat-modal {
@@ -219,6 +260,15 @@
         }
 
         @media (max-width: 768px) {
+            /* スマホ時はヘッダーを少しコンパクトにする */
+            header {
+                height: calc(95px + env(safe-area-inset-top));
+                padding: 0 15px 12px 15px;
+            }
+            header h1 { font-size: 20px; }
+            header p { font-size: 11px; }
+            #stat-btn { right: 15px; bottom: 12px; }
+
             #content-wrap { flex-direction: column-reverse; }
             #list-container {
                 width: 100%; flex: 0 0 45%; border-right: none;
@@ -246,14 +296,18 @@
     </style>
 </head>
 <body>
-    <h2>
-        ぼくのコーヒー地図 by 8ttaro
+    <header>
+        <div class="header-overlay"></div>
+        <div class="header-content">
+            <h1>ぼくのコーヒー地図</h1>
+            <p>A Journey Through Roasteries & Cafés</p>
+        </div>
         <button id="stat-btn">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="white">
                 <path d="M3 22V8h4v14H3zm7 0V2h4v20h-4zm7 0v-10h4v10h-4z"/>
             </svg>
         </button>
-    </h2>
+    </header>
     
     <div id="content-wrap">
         <div id="list-container">

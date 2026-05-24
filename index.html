@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>My Coffee Map</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,500&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { 
@@ -12,30 +17,46 @@
             display: flex; 
             flex-direction: column; 
             height: 100vh; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            /* ★フォントの魔法：全体を洗練されたゴシック体に */
+            font-family: 'Zen Kaku Gothic New', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             overflow: hidden; 
             background-color: #f2f2f7; 
         }
 
-        /* ★大幅変更：ヘッダーエリア（ポートフォリオ風カバー） */
+        /* ==========================================
+           ★スクロールバーの魔法：細く美しくカスタマイズ
+           ========================================== */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent; /* 背景は透明にして浮遊感を出す */
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, 0.15); /* 通常時は薄く */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(0, 0, 0, 0.3); /* マウスを乗せると濃くなる */
+        }
+
         header { 
             position: relative; 
-            /* iPhoneの安全領域を考慮した高さ計算 */
             height: calc(130px + env(safe-area-inset-top)); 
-            /* ↓後ほどご自身で撮影した写真（ex: my-photo.jpg）に差し替え可能です */
+            /* ↓写真のファイル名は環境に合わせて調整してください */
             background-image: url('ASATTECOFFEE.JPG'); 
             background-size: cover;
             background-position: 50% 54%;
             color: white;
             display: flex;
-            align-items: flex-end; /* 文字を写真の下側に配置 */
+            align-items: flex-end; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.25);
             z-index: 1000; 
             box-sizing: border-box;
             padding: 0 20px 18px 20px;
         }
 
-        /* ★写真の上に重ねる暗めのフィルター（文字の視認性確保） */
         .header-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -43,29 +64,30 @@
             z-index: 1;
         }
 
-        /* タイトルとサブタイトルの配置枠 */
         .header-content {
             position: relative;
-            z-index: 2; /* フィルターより上に表示 */
+            z-index: 2; 
         }
         
         header h1 {
             margin: 0;
-            font-size: 24px;
-            font-weight: 800;
-            letter-spacing: 1px;
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: 2px;
             text-shadow: 0 2px 8px rgba(0,0,0,0.5);
         }
 
         header p {
             margin: 5px 0 0 0;
-            font-size: 12px;
-            opacity: 0.85;
-            letter-spacing: 0.5px;
+            /* ★フォントの魔法：英語部分を雑誌のような美しいセリフ体に */
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 16px;
+            font-style: italic;
+            opacity: 0.9;
+            letter-spacing: 1px;
             text-shadow: 0 1px 4px rgba(0,0,0,0.5);
         }
 
-        /* ★統計ボタンの位置をヘッダーの右下に調整 */
         #stat-btn {
             position: absolute; 
             right: 20px; 
@@ -105,7 +127,6 @@
             overflow-x: auto; 
             flex-shrink: 0; 
         }
-        .filter-wrap::-webkit-scrollbar { height: 0; }
 
         .filter-btn {
             background-color: rgba(255, 255, 255, 0.9);
@@ -113,12 +134,13 @@
             padding: 8px 16px;
             border-radius: 20px;
             font-size: 13px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             white-space: nowrap; 
             color: #555;
             box-shadow: 0 2px 5px rgba(0,0,0,0.02);
             transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+            font-family: inherit; /* フォントを引き継ぐ */
         }
         .filter-btn:hover {
             transform: translateY(-1px);
@@ -165,7 +187,7 @@
         }
         
         .list-date { font-size: 12px; color: #888; }
-        .list-name { font-size: 15px; font-weight: bold; color: #333; }
+        .list-name { font-size: 15px; font-weight: 700; color: #333; }
 
         .badge {
             background-color: #e74c3c;
@@ -174,13 +196,14 @@
             padding: 2px 8px;
             border-radius: 12px;
             margin-left: 8px;
-            font-weight: bold;
+            font-weight: 700;
             box-shadow: 0 2px 4px rgba(231, 76, 60, 0.3);
         }
 
         .leaflet-popup-content-wrapper {
             border-radius: 16px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            font-family: 'Zen Kaku Gothic New', sans-serif;
         }
         .popup-history {
             max-height: 150px;
@@ -195,7 +218,6 @@
 
         #toggle-list-btn { display: none; }
 
-        /* 統計モーダル */
         #stat-modal {
             display: none; 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -224,18 +246,18 @@
             100% { transform: scale(1) translateY(0); opacity: 1; }
         }
 
-        .stat-box h3 { margin-top: 0; color: #333; font-size: 18px; border-bottom: 2px solid rgba(139, 69, 19, 0.2); padding-bottom: 12px; }
-        .stat-number { font-size: 32px; font-weight: 800; color: #8B4513; margin: 5px 0; text-shadow: 0 2px 4px rgba(139,69,19,0.1); }
-        .stat-label { font-size: 12px; color: #666; margin-bottom: 20px; font-weight: 600; }
+        .stat-box h3 { margin-top: 0; color: #333; font-size: 18px; border-bottom: 2px solid rgba(139, 69, 19, 0.2); padding-bottom: 12px; font-weight: 700; }
+        .stat-number { font-size: 32px; font-weight: 700; color: #8B4513; margin: 5px 0; text-shadow: 0 2px 4px rgba(139,69,19,0.1); }
+        .stat-label { font-size: 12px; color: #666; margin-bottom: 20px; font-weight: 700; }
         
         #close-stat-btn {
             background-color: #f2f2f7; color: #333; border: none; padding: 10px 24px;
-            border-radius: 20px; cursor: pointer; font-weight: bold; margin-top: 15px;
+            border-radius: 20px; cursor: pointer; font-weight: 700; margin-top: 15px;
             transition: all 0.2s;
+            font-family: inherit;
         }
         #close-stat-btn:hover { background-color: #e5e5ea; transform: scale(1.05); }
 
-        /* ホバーモーション用デザイン */
         .glass-tooltip {
             background-color: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(10px);
@@ -244,29 +266,35 @@
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             color: #333;
-            font-weight: bold;
+            font-weight: 700;
             font-size: 13px;
+            font-family: 'Zen Kaku Gothic New', sans-serif;
         }
         .leaflet-tooltip-left.glass-tooltip::before,
         .leaflet-tooltip-right.glass-tooltip::before,
         .leaflet-tooltip-top.glass-tooltip::before,
-        .leaflet-tooltip-bottom.glass-tooltip::before {
-            display: none; 
-        }
+        .leaflet-tooltip-bottom.glass-tooltip::before { display: none; }
 
         .pin-hover-effect svg {
             transform: scale(1.2) translateY(-5px);
             filter: drop-shadow(0 10px 8px rgba(0,0,0,0.3));
         }
 
+        /* Leafletの切り替えコントロールUIを少しスタイリッシュに */
+        .leaflet-control-layers {
+            border-radius: 12px !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+            font-family: 'Zen Kaku Gothic New', sans-serif;
+            font-size: 13px;
+        }
+
         @media (max-width: 768px) {
-            /* スマホ時はヘッダーを少しコンパクトにする */
             header {
                 height: calc(95px + env(safe-area-inset-top));
                 padding: 0 15px 12px 15px;
             }
             header h1 { font-size: 20px; }
-            header p { font-size: 11px; }
+            header p { font-size: 12px; }
             #stat-btn { right: 15px; bottom: 12px; }
 
             #content-wrap { flex-direction: column-reverse; }
@@ -287,9 +315,10 @@
                 -webkit-backdrop-filter: blur(10px);
                 border: 1px solid rgba(255,255,255,0.2);
                 color: white; padding: 14px 28px; border-radius: 30px;
-                font-size: 14px; font-weight: bold;
+                font-size: 14px; font-weight: 700;
                 box-shadow: 0 8px 16px rgba(139,69,19,0.3);
                 transition: transform 0.2s, box-shadow 0.2s;
+                font-family: inherit;
             }
             #toggle-list-btn:active { transform: translateX(-50%) scale(0.95); }
         }
@@ -337,8 +366,25 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        var map = L.map('map').setView([36.2048, 138.2529], 5);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution: '&copy; OpenStreetMap &copy; CARTO' }).addTo(map);
+        // ★地図スキンの魔法：3種類のデザインを用意
+        var lightMap = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution: '&copy; OpenStreetMap &copy; CARTO'});
+        var darkMap = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {attribution: '&copy; OpenStreetMap &copy; CARTO'});
+        var topoMap = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {attribution: 'Map data: &copy; OpenStreetMap contributors, SRTM | Map style: &copy; OpenTopoMap'});
+
+        var map = L.map('map', {
+            center: [36.2048, 138.2529],
+            zoom: 5,
+            layers: [lightMap] // 初期設定は明るい地図
+        });
+
+        // ★右上にレイヤー切り替えボタンを追加
+        var baseMaps = {
+            "明るい地図": lightMap,
+            "シネマティック（黒）": darkMap,
+            "アウトドア（地形図）": topoMap
+        };
+        L.control.layers(baseMaps).addTo(map);
+
 
         var markerGroup = L.layerGroup().addTo(map);
 

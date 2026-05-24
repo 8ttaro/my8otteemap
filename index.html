@@ -11,16 +11,15 @@
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        /* ★ スクロールを滑らかにする魔法 */
         html {
             scroll-behavior: smooth;
+            scroll-snap-type: y mandatory;
         }
 
         body { 
             margin: 0; 
             padding: 0; 
             font-family: 'Zen Kaku Gothic New', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            /* ★ overflow: hidden を消して、縦スクロールできるように変更 */
             background-color: #f2f2f7; 
         }
 
@@ -29,13 +28,14 @@
         ::-webkit-scrollbar-thumb { background-color: rgba(0, 0, 0, 0.15); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background-color: rgba(0, 0, 0, 0.3); }
 
-        /* ==========================================
-           ★ 第1画面：写真が「どん！」と出るヒーローセクション
-           ========================================== */
         .hero-section {
             position: relative;
-            height: 100vh; /* 画面の高さいっぱい（100%）に表示 */
+            height: 100vh; 
+            height: 100dvh; 
             width: 100%;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+
             background-image: url('ASATTECOFFEE.JPG'); 
             background-size: cover;
             background-position: 50% 54%;
@@ -54,44 +54,24 @@
             z-index: 1;
         }
 
-        .hero-content {
-            position: relative;
-            z-index: 2; 
-        }
+        .hero-content { position: relative; z-index: 2; }
         
         .hero-content h1 {
-            margin: 0;
-            font-size: 42px; /* タイトルを大きくドン！と */
-            font-weight: 700;
-            letter-spacing: 4px;
-            text-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            margin: 0; font-size: 42px; font-weight: 700;
+            letter-spacing: 4px; text-shadow: 0 4px 15px rgba(0,0,0,0.6);
         }
 
         .hero-content p {
-            margin: 15px 0 0 0;
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 22px;
-            font-style: italic;
-            opacity: 0.9;
-            letter-spacing: 2px;
-            text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+            margin: 15px 0 0 0; font-family: 'Cormorant Garamond', serif;
+            font-size: 22px; font-style: italic; opacity: 0.9;
+            letter-spacing: 2px; text-shadow: 0 2px 8px rgba(0,0,0,0.6);
         }
 
-        /* 下へスクロールを促すアニメーションアイコン */
         .scroll-prompt {
-            position: absolute;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 2;
-            color: white;
-            text-decoration: none;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            opacity: 0.8;
-            transition: opacity 0.3s;
-            animation: bounce 2s infinite; /* ふわふわ動かす */
+            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+            z-index: 2; color: white; text-decoration: none; display: flex;
+            flex-direction: column; align-items: center; opacity: 0.8;
+            transition: opacity 0.3s; animation: bounce 2s infinite; 
         }
         .scroll-prompt:hover { opacity: 1; }
         .scroll-prompt span { font-size: 10px; letter-spacing: 2px; margin-bottom: 5px; }
@@ -103,108 +83,63 @@
             60% { transform: translateY(-5px) translateX(-50%); }
         }
 
-        /* ==========================================
-           ★ 第2画面：スクロールした先にあるいつもの地図アプリ
-           ========================================== */
         .app-section {
-            height: 100vh; /* アプリ部分も画面の高さ100%分確保する */
+            height: 100vh; 
+            height: 100dvh;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
             display: flex;
             flex-direction: column;
             position: relative;
         }
 
+        /* 統計ボタン（右上） */
         #stat-btn {
             position: absolute; 
             right: 20px; 
-            top: calc(20px + env(safe-area-inset-top)); /* ヒーローからアプリ側に移動 */
+            top: calc(20px + env(safe-area-inset-top)); 
             background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-            border: 1px solid rgba(0,0,0,0.1);
-            cursor: pointer; 
-            padding: 10px;
-            border-radius: 50%;
+            backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+            border: 1px solid rgba(0,0,0,0.1); cursor: pointer; 
+            padding: 10px; border-radius: 50%;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             display: flex; align-items: center; justify-content: center;
-            z-index: 2000;
-            opacity: 0.9; transition: opacity 0.2s, transform 0.2s; 
+            z-index: 2000; opacity: 0.9; transition: opacity 0.2s, transform 0.2s; 
         }
         #stat-btn:active { opacity: 0.5; transform: scale(0.9); }
         #stat-btn svg { fill: #333; }
+
+        /* TOPへ戻るボタン（右下） */
+        #back-to-top-btn {
+            position: absolute; 
+            right: 20px; 
+            bottom: 40px; 
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+            border: 1px solid rgba(0,0,0,0.1); cursor: pointer; 
+            padding: 10px; border-radius: 50%;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 2000; opacity: 0.9; transition: opacity 0.2s, transform 0.2s; 
+            text-decoration: none; 
+        }
+        #back-to-top-btn:active { opacity: 0.5; transform: scale(0.9); }
+        #back-to-top-btn svg { fill: #333; }
         
-        #content-wrap {
-            display: flex;
-            flex: 1; 
-            width: 100%;
-            flex-direction: row; 
-            min-height: 0; 
-        }
-
-        #list-container {
-            width: 320px; 
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            background-color: #f2f2f7; 
-            border-right: 1px solid #e5e5ea; 
-        }
-
-        .filter-wrap {
-            padding: 12px 10px;
-            background-color: rgba(242, 242, 247, 0.8);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-            display: flex;
-            gap: 8px;
-            overflow-x: auto; 
-            flex-shrink: 0; 
-        }
-
-        .filter-btn {
-            background-color: rgba(255, 255, 255, 0.9);
-            border: 1px solid rgba(0,0,0,0.05);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            white-space: nowrap; 
-            color: #555;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-            transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
-            font-family: inherit; 
-        }
+        #content-wrap { display: flex; flex: 1; width: 100%; flex-direction: row; min-height: 0; }
+        #list-container { width: 320px; height: 100%; display: flex; flex-direction: column; background-color: #f2f2f7; border-right: 1px solid #e5e5ea; }
+        .filter-wrap { padding: 12px 10px; background-color: rgba(242, 242, 247, 0.8); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; gap: 8px; overflow-x: auto; flex-shrink: 0; }
+        .filter-btn { background-color: rgba(255, 255, 255, 0.9); border: 1px solid rgba(0,0,0,0.05); padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; color: #555; box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); font-family: inherit; }
         .filter-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.05); background-color: #fff; }
         .filter-btn.active { background-color: #333; color: white; border-color: #333; box-shadow: 0 4px 10px rgba(51,51,51,0.2); }
 
         #list-content { flex: 1; overflow-y: auto; padding: 10px; }
         #map { flex: 1; height: 100%; z-index: 1;}
 
-        .list-item {
-            background-color: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            padding: 16px;
-            margin-bottom: 12px;
-            border-radius: 16px; 
-            border: 1px solid rgba(255, 255, 255, 1);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s, background-color 0.2s;
-        }
-        .list-item:hover { 
-            background-color: rgba(255, 255, 255, 1); 
-            transform: translateY(-3px) scale(1.02); 
-            box-shadow: 0 10px 20px rgba(0,0,0,0.08); 
-        }
-        
+        .list-item { background-color: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 16px; margin-bottom: 12px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 1); box-shadow: 0 2px 8px rgba(0,0,0,0.03); cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s, background-color 0.2s; }
+        .list-item:hover { background-color: rgba(255, 255, 255, 1); transform: translateY(-3px) scale(1.02); box-shadow: 0 10px 20px rgba(0,0,0,0.08); }
         .list-date { font-size: 12px; color: #888; }
         .list-name { font-size: 15px; font-weight: 700; color: #333; }
-
         .badge { background-color: #e74c3c; color: white; font-size: 10px; padding: 2px 8px; border-radius: 12px; margin-left: 8px; font-weight: 700; box-shadow: 0 2px 4px rgba(231, 76, 60, 0.3); }
 
         .leaflet-popup-content-wrapper { border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); font-family: 'Zen Kaku Gothic New', sans-serif; }
@@ -214,21 +149,9 @@
 
         #toggle-list-btn { display: none; }
 
-        #stat-modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.3); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-            z-index: 4000; justify-content: center; align-items: center;
-        }
-
-        .stat-box {
-            background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.6); padding: 30px 25px; border-radius: 24px;
-            width: 80%; max-width: 320px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-            animation: springPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-
+        #stat-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.3); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 4000; justify-content: center; align-items: center; }
+        .stat-box { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.6); padding: 30px 25px; border-radius: 24px; width: 80%; max-width: 320px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15); animation: springPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         @keyframes springPop { 0% { transform: scale(0.8) translateY(20px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
-
         .stat-box h3 { margin-top: 0; color: #333; font-size: 18px; border-bottom: 2px solid rgba(139, 69, 19, 0.2); padding-bottom: 12px; font-weight: 700; }
         .stat-number { font-size: 32px; font-weight: 700; color: #8B4513; margin: 5px 0; text-shadow: 0 2px 4px rgba(139,69,19,0.1); }
         .stat-label { font-size: 12px; color: #666; margin-bottom: 20px; font-weight: 700; }
@@ -238,12 +161,16 @@
         .glass-tooltip { background-color: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.8); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); color: #333; font-weight: 700; font-size: 13px; font-family: 'Zen Kaku Gothic New', sans-serif; }
         .leaflet-tooltip-left.glass-tooltip::before, .leaflet-tooltip-right.glass-tooltip::before, .leaflet-tooltip-top.glass-tooltip::before, .leaflet-tooltip-bottom.glass-tooltip::before { display: none; }
         .pin-hover-effect svg { transform: scale(1.2) translateY(-5px); filter: drop-shadow(0 10px 8px rgba(0,0,0,0.3)); }
+        
         .leaflet-control-layers { border-radius: 12px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important; font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 13px; }
 
         @media (max-width: 768px) {
             .hero-content h1 { font-size: 32px; }
             .hero-content p { font-size: 16px; }
             
+            #stat-btn { right: 15px; }
+            #back-to-top-btn { right: 15px; bottom: 85px; }
+
             #content-wrap { flex-direction: column-reverse; }
             #list-container { width: 100%; flex: 0 0 45%; border-right: none; border-top: 1px solid #ccc; display: none; min-height: 0; border-radius: 20px 20px 0 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); }
             #list-container.active { display: flex; }
@@ -256,7 +183,7 @@
 </head>
 <body>
     
-    <header class="hero-section">
+    <header id="hero-section" class="hero-section">
         <div class="hero-overlay"></div>
         <div class="hero-content">
             <h1>ぼくのコーヒー地図</h1>
@@ -269,11 +196,17 @@
     </header>
     
     <main id="app-section" class="app-section">
-        <button id="stat-btn">
+        <button id="stat-btn" title="統計データ">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
                 <path d="M3 22V8h4v14H3zm7 0V2h4v20h-4zm7 0v-10h4v10h-4z"/>
             </svg>
         </button>
+
+        <a href="#hero-section" id="back-to-top-btn" title="トップへ戻る">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+                <path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z"/>
+            </svg>
+        </a>
 
         <div id="content-wrap">
             <div id="list-container">
@@ -291,34 +224,33 @@
             <h3 id="stat-title">コーヒー活動記録</h3>
             <div class="stat-label">総来店回数 (飲んだ杯数)</div>
             <div class="stat-number" id="stat-cups">0 杯</div>
-            
             <div class="stat-label">開拓した店舗数</div>
             <div class="stat-number" id="stat-shops">0 店舗</div>
-            
             <div class="stat-label">コーヒーに使った総額</div>
             <div class="stat-number" id="stat-money">¥ 0</div>
-            
             <button id="close-stat-btn">閉じる</button>
         </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // ★ アウトドア用地図（TopoMap）を削除し、明るい/暗いの2種類のみに
         var lightMap = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution: '&copy; OpenStreetMap &copy; CARTO'});
         var darkMap = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {attribution: '&copy; OpenStreetMap &copy; CARTO'});
 
+        // ★ 変更：scrollWheelZoom: false を削除し、マップ上のスクロールでズームできるようにしました
         var map = L.map('map', {
             center: [36.2048, 138.2529],
             zoom: 5,
             layers: [lightMap]
         });
 
+        // ★ 変更：名前を「ライト」と「ダーク」に固定しました
         var baseMaps = {
-            "ホワイト": lightMap,
-            "ブラック": darkMap
+            "ライト": lightMap,
+            "ダーク": darkMap
         };
-        L.control.layers(baseMaps).addTo(map);
+
+        L.control.layers(baseMaps, null, { position: 'bottomleft' }).addTo(map);
 
         var markerGroup = L.layerGroup().addTo(map);
 

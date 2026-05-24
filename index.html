@@ -13,7 +13,7 @@
             flex-direction: column; 
             height: 100vh; 
             font-family: sans-serif;
-            overflow: hidden; /* 画面全体の余計なスクロールを防止 */
+            overflow: hidden; 
         }
         h2 { 
             margin: 0; 
@@ -24,6 +24,7 @@
             text-align: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             z-index: 1000; 
+            position: relative; /* ボタンの基準位置にするため */
         }
         
         #content-wrap {
@@ -31,7 +32,7 @@
             flex: 1; 
             width: 100%;
             flex-direction: row; 
-            min-height: 0; /* これがFlexboxスクロール問題の解決策 */
+            min-height: 0; 
         }
 
         #list-container {
@@ -55,46 +56,101 @@
             justify-content: space-between;
             align-items: center;
         }
-        .list-item:hover {
-            background-color: #eef; 
-        }
-        .list-date {
+        .list-item:hover { background-color: #eef; }
+        .list-date { font-size: 12px; color: #888; }
+        .list-name { font-size: 15px; font-weight: bold; color: #333; }
+
+        .badge {
+            background-color: #e74c3c;
+            color: white;
             font-size: 10px;
-            color: #888;
-        }
-        .list-name {
-            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 8px;
             font-weight: bold;
-            color: #333;
         }
 
-        /* ★スマホ専用ボタンの基本デザイン（PCでは非表示） */
-        #toggle-list-btn {
-            display: none; 
+        .popup-history {
+            max-height: 150px;
+            overflow-y: auto;
+            margin-top: 10px;
+            padding-right: 5px;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+        .history-item {
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #eee;
+        }
+        .history-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
         }
 
-        /* ★レスポンシブの魔法：スマホ向けのレイアウト */
+        #toggle-list-btn { display: none; }
+
+        /* ==========================================
+           ★追加：ダッシュボード（統計画面）のデザイン
+           ========================================== */
+        #stat-btn {
+            position: absolute;
+            right: 15px;
+            top: calc(10px + env(safe-area-inset-top));
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        #stat-modal {
+            display: none; /* 初期状態は非表示 */
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .stat-box {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            width: 80%;
+            max-width: 350px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .stat-box h3 { margin-top: 0; color: #333; border-bottom: 2px solid #8B4513; padding-bottom: 10px; }
+        .stat-number { font-size: 28px; font-weight: bold; color: #8B4513; margin: 10px 0; }
+        .stat-label { font-size: 12px; color: #666; margin-bottom: 20px; }
+        
+        #close-stat-btn {
+            background-color: #ccc;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        /* ========================================== */
+
         @media (max-width: 768px) {
-            #content-wrap {
-                flex-direction: column-reverse; /* 地図が上、リストが下 */
-            }
+            #content-wrap { flex-direction: column-reverse; }
             #list-container {
                 width: 100%; 
-                flex: 0 0 45%; /* リストを表示する時は画面の45%を使う */
+                flex: 0 0 45%; 
                 border-right: none;
                 border-top: 1px solid #ccc;
-                display: none; /* スマホの初期状態は非表示（地図を全画面に） */
-                min-height: 0; /* ★スマホでのスクロールバグを直す魔法 */
+                display: none; 
+                min-height: 0; 
             }
-            #list-container.active {
-                display: block; /* ボタンを押したら表示される */
-            }
-            #map {
-                flex: 1; /* 残りの高さをすべて使う */
-                min-height: 0;
-            }
-
-            /* ★スマホ専用ボタンを画面下部に浮かせる */
+            #list-container.active { display: block; }
+            #map { flex: 1; min-height: 0; }
             #toggle-list-btn {
                 display: block;
                 position: fixed;
@@ -116,7 +172,10 @@
     </style>
 </head>
 <body>
-    <h2>ぼくのコーヒー地図 by 8ttaro</h2>
+    <h2>
+        ぼくのコーヒー地図 by 8ttaro
+        <button id="stat-btn">📊</button>
+    </h2>
     
     <div id="content-wrap">
         <div id="list-container"></div>
@@ -125,10 +184,25 @@
 
     <button id="toggle-list-btn">リストを表示 📝</button>
 
+    <div id="stat-modal">
+        <div class="stat-box">
+            <h3>コーヒー活動記録</h3>
+            <div class="stat-label">総来店回数 (飲んだ杯数)</div>
+            <div class="stat-number" id="stat-cups">0 杯</div>
+            
+            <div class="stat-label">開拓した店舗数</div>
+            <div class="stat-number" id="stat-shops">0 店舗</div>
+            
+            <div class="stat-label">コーヒーに使った総額</div>
+            <div class="stat-number" id="stat-money">¥ 0</div>
+            
+            <button id="close-stat-btn">閉じる</button>
+        </div>
+    </div>
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         var map = L.map('map').setView([36.2048, 138.2529], 5);
-
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution: '&copy; OpenStreetMap &copy; CARTO' }).addTo(map);
 
         var toggleBtn = document.getElementById('toggle-list-btn');
@@ -144,39 +218,59 @@
             setTimeout(function() { map.invalidateSize(); }, 100);
         });
 
+        // ★追加：統計モーダルの開閉処理
+        var statBtn = document.getElementById('stat-btn');
+        var statModal = document.getElementById('stat-modal');
+        var closeStatBtn = document.getElementById('close-stat-btn');
+
+        statBtn.addEventListener('click', function() {
+            statModal.style.display = 'flex';
+        });
+        closeStatBtn.addEventListener('click', function() {
+            statModal.style.display = 'none';
+        });
+
         fetch('shops.json')
             .then(response => response.json())
             .then(flatData => {
                 
-                // ==========================================
-                // ★追加した魔法のコード：平坦なデータを「店名」で自動でまとめる
-                // ==========================================
                 var groupedShops = {};
+                var totalMoney = 0; // ★追加：総額を計算する用の変数
 
                 flatData.forEach(function(item) {
-                    // もし初めて見る店名だったら、新しい箱を作る
                     if (!groupedShops[item.name]) {
                         groupedShops[item.name] = {
                             name: item.name,
                             lat: item.lat,
                             lng: item.lng,
-                            visits: [] // 履歴を入れる空のリスト
+                            visits: [] 
                         };
                     }
-                    // そのお店の履歴リストに、今回の訪問データを追加する
                     groupedShops[item.name].visits.push({
                         date: item.date,
                         drink: item.drink,
                         price: item.price,
                         comment: item.comment
                     });
+
+                    // ★追加：金額をどんどん足していく処理
+                    // （※priceが空欄のデータがあってもエラーにならないように対策）
+                    if(item.price && !isNaN(item.price)) {
+                        totalMoney += Number(item.price);
+                    }
                 });
 
-                // まとめたデータを配列（リスト）の形に変換する
                 var data = Object.values(groupedShops);
+
+                // ==========================================
+                // ★追加：計算した統計データをHTMLに書き込む
+                // ==========================================
+                document.getElementById('stat-cups').textContent = flatData.length + ' 杯';
+                document.getElementById('stat-shops').textContent = data.length + ' 店舗';
+                document.getElementById('stat-money').textContent = '¥ ' + totalMoney.toLocaleString(); // カンマ区切りにする
                 // ==========================================
 
-                // ここから下は前回と同じ（まとまったデータを使って画面を作る）
+
                 data.sort(function(a, b) {
                     var latestA = new Date(Math.max(...a.visits.map(v => new Date(v.date))));
                     var latestB = new Date(Math.max(...b.visits.map(v => new Date(v.date))));
@@ -184,7 +278,6 @@
                 });
 
                 data.forEach(shop => {
-                    // 各お店の訪問履歴を「最新が一番上」になるように並び替え
                     shop.visits.sort((a, b) => new Date(b.date) - new Date(a.date));
                     
                     var visitCount = shop.visits.length;
@@ -213,7 +306,6 @@
                         popupAnchor: [0, -45] 
                     });
 
-                    // ポップアップの生成処理
                     var popupContent = '<b style="font-size:15px;">' + shop.name + '</b>';
                     popupContent += '<div class="popup-history">';
                     
@@ -229,7 +321,6 @@
                     var marker = L.marker([shop.lat, shop.lng], { icon: customIcon }).addTo(map)
                         .bindPopup(popupContent);
 
-                    // リスト側の処理
                     var listItem = document.createElement('div');
                     listItem.className = 'list-item'; 
                     

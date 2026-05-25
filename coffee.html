@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>My Coffee Map</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,500&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        html {
+            scroll-behavior: smooth;
+            scroll-snap-type: y mandatory;
+        }
+
+        body { 
+            margin: 0; 
+            padding: 0; 
+            font-family: 'Zen Kaku Gothic New', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f2f2f7; 
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background-color: rgba(0, 0, 0, 0.15); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background-color: rgba(0, 0, 0, 0.3); }
+
+        .hero-section {
+            position: relative;
+            height: 100vh; 
+            height: 100dvh; 
+            width: 100%;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+
+            background-image: url('ASATTECOFFEE.JPG'); 
+            background-size: cover;
+            background-position: 50% 77%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            z-index: 1000;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.65) 100%);
+            z-index: 1;
+        }
+
+        .hero-content { position: relative; z-index: 2; }
+        
+        .hero-content h1 {
+            margin: 0; font-size: 42px; font-weight: 700;
+            letter-spacing: 4px; text-shadow: 0 4px 15px rgba(0,0,0,0.6);
+        }
+
+        .hero-content p {
+            margin: 15px 0 0 0; font-family: 'Cormorant Garamond', serif;
+            font-size: 22px; font-style: italic; opacity: 0.9;
+            letter-spacing: 2px; text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+        }
+
+        .scroll-prompt {
+            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+            z-index: 2; color: white; text-decoration: none; display: flex;
+            flex-direction: column; align-items: center; opacity: 0.8;
+            transition: opacity 0.3s; animation: bounce 2s infinite; 
+        }
+        .scroll-prompt:hover { opacity: 1; }
+        .scroll-prompt span { font-size: 10px; letter-spacing: 2px; margin-bottom: 5px; }
+        .scroll-prompt svg { fill: white; width: 20px; height: 20px; }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0) translateX(-50%); }
+            40% { transform: translateY(-10px) translateX(-50%); }
+            60% { transform: translateY(-5px) translateX(-50%); }
+        }
+
+        .app-section {
+            height: 100vh; 
+            height: 100dvh;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* 統計ボタン（右上） */
+        #stat-btn {
+            position: absolute; 
+            right: 20px; 
+            top: calc(20px + env(safe-area-inset-top)); 
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+            border: 1px solid rgba(0,0,0,0.1); cursor: pointer; 
+            padding: 10px; border-radius: 50%;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 2000; opacity: 0.9; transition: opacity 0.2s, transform 0.2s; 
+        }
+        #stat-btn:active { opacity: 0.5; transform: scale(0.9); }
+        #stat-btn svg { fill: #333; }
+
+        /* TOPへ戻るボタン（右下） */
+        #back-to-top-btn {
+            position: absolute; 
+            right: 20px; 
+            bottom: 40px; 
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+            border: 1px solid rgba(0,0,0,0.1); cursor: pointer; 
+            padding: 10px; border-radius: 50%;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 2000; opacity: 0.9; transition: opacity 0.2s, transform 0.2s; 
+            text-decoration: none; 
+        }
+        #back-to-top-btn:active { opacity: 0.5; transform: scale(0.9); }
+        #back-to-top-btn svg { fill: #333; }
+        
+        #content-wrap { display: flex; flex: 1; width: 100%; flex-direction: row; min-height: 0; }
+        #list-container { width: 320px; height: 100%; display: flex; flex-direction: column; background-color: #f2f2f7; border-right: 1px solid #e5e5ea; }
+        .filter-wrap { padding: 12px 10px; background-color: rgba(242, 242, 247, 0.8); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; gap: 8px; overflow-x: auto; flex-shrink: 0; }
+        .filter-btn { background-color: rgba(255, 255, 255, 0.9); border: 1px solid rgba(0,0,0,0.05); padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; color: #555; box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); font-family: inherit; }
+        .filter-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.05); background-color: #fff; }
+        .filter-btn.active { background-color: #333; color: white; border-color: #333; box-shadow: 0 4px 10px rgba(51,51,51,0.2); }
+
+        #list-content { flex: 1; overflow-y: auto; padding: 10px; }
+        #map { flex: 1; height: 100%; z-index: 1;}
+
+        .list-item { background-color: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 16px; margin-bottom: 12px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 1); box-shadow: 0 2px 8px rgba(0,0,0,0.03); cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s, background-color 0.2s; }
+        .list-item:hover { background-color: rgba(255, 255, 255, 1); transform: translateY(-3px) scale(1.02); box-shadow: 0 10px 20px rgba(0,0,0,0.08); }
+        .list-date { font-size: 12px; color: #888; }
+        .list-name { font-size: 15px; font-weight: 700; color: #333; }
+        .badge { background-color: #e74c3c; color: white; font-size: 10px; padding: 2px 8px; border-radius: 12px; margin-left: 8px; font-weight: 700; box-shadow: 0 2px 4px rgba(231, 76, 60, 0.3); }
+
+        .leaflet-popup-content-wrapper { border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); font-family: 'Zen Kaku Gothic New', sans-serif; }
+        .popup-history { max-height: 150px; overflow-y: auto; margin-top: 10px; padding-right: 5px; border-top: 1px solid #eee; padding-top: 10px; }
+        .history-item { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed #eee; }
+        .history-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+        #toggle-list-btn { display: none; }
+
+        #stat-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.3); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 4000; justify-content: center; align-items: center; }
+        .stat-box { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.6); padding: 30px 25px; border-radius: 24px; width: 80%; max-width: 320px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15); animation: springPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes springPop { 0% { transform: scale(0.8) translateY(20px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
+        .stat-box h3 { margin-top: 0; color: #333; font-size: 18px; border-bottom: 2px solid rgba(139, 69, 19, 0.2); padding-bottom: 12px; font-weight: 700; }
+        .stat-number { font-size: 32px; font-weight: 700; color: #8B4513; margin: 5px 0; text-shadow: 0 2px 4px rgba(139,69,19,0.1); }
+        .stat-label { font-size: 12px; color: #666; margin-bottom: 20px; font-weight: 700; }
+        #close-stat-btn { background-color: #f2f2f7; color: #333; border: none; padding: 10px 24px; border-radius: 20px; cursor: pointer; font-weight: 700; margin-top: 15px; transition: all 0.2s; font-family: inherit; }
+        #close-stat-btn:hover { background-color: #e5e5ea; transform: scale(1.05); }
+
+        .glass-tooltip { background-color: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.8); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); color: #333; font-weight: 700; font-size: 13px; font-family: 'Zen Kaku Gothic New', sans-serif; }
+        .leaflet-tooltip-left.glass-tooltip::before, .leaflet-tooltip-right.glass-tooltip::before, .leaflet-tooltip-top.glass-tooltip::before, .leaflet-tooltip-bottom.glass-tooltip::before { display: none; }
+        .pin-hover-effect svg { transform: scale(1.2) translateY(-5px); filter: drop-shadow(0 10px 8px rgba(0,0,0,0.3)); }
+        
+        .leaflet-control-layers { border-radius: 12px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important; font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 13px; }
+
+        @media (max-width: 768px) {
+            .hero-content h1 { font-size: 32px; }
+            .hero-content p { font-size: 16px; }
+            
+            #stat-btn { right: 15px; }
+            #back-to-top-btn { right: 15px; bottom: 85px; }
+
+            #content-wrap { flex-direction: column-reverse; }
+            #list-container { width: 100%; flex: 0 0 45%; border-right: none; border-top: 1px solid #ccc; display: none; min-height: 0; border-radius: 20px 20px 0 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); }
+            #list-container.active { display: flex; }
+            #map { flex: 1; min-height: 0; }
+            
+            #toggle-list-btn { display: block; position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 2000; background-color: rgba(139, 69, 19, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 14px 28px; border-radius: 30px; font-size: 14px; font-weight: 700; box-shadow: 0 8px 16px rgba(139,69,19,0.3); transition: transform 0.2s, box-shadow 0.2s; font-family: inherit; }
+            #toggle-list-btn:active { transform: translateX(-50%) scale(0.95); }
+        }
+    </style>
+</head>
+<body>
+    
+    <header id="hero-section" class="hero-section">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <h1>ぼくのコーヒー地図</h1>
+            <p>A Journey Through Roasteries & Cafés</p>
+        </div>
+        <a href="#app-section" class="scroll-prompt">
+            <span>SCROLL</span>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+        </a>
+    </header>
+    
+    <main id="app-section" class="app-section">
+        <button id="stat-btn" title="統計データ">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+                <path d="M3 22V8h4v14H3zm7 0V2h4v20h-4zm7 0v-10h4v10h-4z"/>
+            </svg>
+        </button>
+
+        <a href="#hero-section" id="back-to-top-btn" title="トップへ戻る">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+                <path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z"/>
+            </svg>
+        </a>
+
+        <div id="content-wrap">
+            <div id="list-container">
+                <div class="filter-wrap" id="filter-wrap"></div>
+                <div id="list-content"></div>
+            </div>
+            <div id="map"></div>
+        </div>
+
+        <button id="toggle-list-btn">リストを表示 📝</button>
+    </main>
+
+    <div id="stat-modal">
+        <div class="stat-box">
+            <h3 id="stat-title">コーヒー活動記録</h3>
+            <div class="stat-label">総来店回数 (飲んだ杯数)</div>
+            <div class="stat-number" id="stat-cups">0 杯</div>
+            <div class="stat-label">開拓した店舗数</div>
+            <div class="stat-number" id="stat-shops">0 店舗</div>
+            <div class="stat-label">コーヒーに使った総額</div>
+            <div class="stat-number" id="stat-money">¥ 0</div>
+            <button id="close-stat-btn">閉じる</button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        var lightMap = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution: '&copy; OpenStreetMap &copy; CARTO'});
+        var darkMap = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {attribution: '&copy; OpenStreetMap &copy; CARTO'});
+
+        // ★ 変更：scrollWheelZoom: false を削除し、マップ上のスクロールでズームできるようにしました
+        var map = L.map('map', {
+            center: [36.2048, 138.2529],
+            zoom: 5,
+            layers: [lightMap]
+        });
+
+        // ★ 変更：名前を「ライト」と「ダーク」に固定しました
+        var baseMaps = {
+            "ライト": lightMap,
+            "ダーク": darkMap
+        };
+
+        L.control.layers(baseMaps, null, { position: 'bottomleft' }).addTo(map);
+
+        var markerGroup = L.layerGroup().addTo(map);
+
+        var toggleBtn = document.getElementById('toggle-list-btn');
+        var listContainer = document.getElementById('list-container');
+
+        toggleBtn.addEventListener('click', function() {
+            listContainer.classList.toggle('active'); 
+            if (listContainer.classList.contains('active')) {
+                toggleBtn.textContent = '地図のみ表示 🗺️';
+            } else {
+                toggleBtn.textContent = 'リストを表示 📝';
+            }
+            setTimeout(function() { map.invalidateSize(); }, 100);
+        });
+
+        var statBtn = document.getElementById('stat-btn');
+        var statModal = document.getElementById('stat-modal');
+        var closeStatBtn = document.getElementById('close-stat-btn');
+
+        statBtn.addEventListener('click', function() { statModal.style.display = 'flex'; });
+        closeStatBtn.addEventListener('click', function() { statModal.style.display = 'none'; });
+
+        function getYearColor(year) {
+            if (year === '2026') return '#8B4513'; 
+            if (year === '2025') return '#D35400'; 
+            if (year === '2024') return '#2980B9'; 
+            if (year === '2023') return '#27AE60'; 
+            return '#7F8C8D';                     
+        }
+
+        fetch('shops.json')
+            .then(response => response.json())
+            .then(flatData => {
+                var years = ['all'];
+                flatData.forEach(function(item) {
+                    var y = item.date.substring(0, 4); 
+                    if (years.indexOf(y) === -1) { years.push(y); }
+                });
+                years.splice(years.indexOf('all'), 1);
+                years.sort((a, b) => b - a);
+                years.unshift('all');
+
+                var filterWrap = document.getElementById('filter-wrap');
+                years.forEach(function(year) {
+                    var btn = document.createElement('button');
+                    btn.className = 'filter-btn';
+                    if (year === 'all') {
+                        btn.textContent = 'すべて';
+                        btn.classList.add('active'); 
+                    } else {
+                        btn.textContent = year + '年';
+                    }
+                    btn.addEventListener('click', function() {
+                        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        updateDisplay(flatData, year);
+                    });
+                    filterWrap.appendChild(btn);
+                });
+                updateDisplay(flatData, 'all');
+            })
+            .catch(error => console.error('データの読み込みに失敗しました:', error));
+
+        function updateDisplay(flatData, targetYear) {
+            markerGroup.clearLayers();
+            var listContent = document.getElementById('list-content');
+            listContent.innerHTML = '';
+
+            var filteredFlatData = flatData.filter(function(item) {
+                var y = item.date.substring(0, 4);
+                return targetYear === 'all' || y === targetYear;
+            });
+
+            var groupedShops = {};
+            var totalMoney = 0;
+
+            filteredFlatData.forEach(function(item) {
+                if (!groupedShops[item.name]) {
+                    groupedShops[item.name] = { name: item.name, lat: item.lat, lng: item.lng, visits: [] };
+                }
+                groupedShops[item.name].visits.push({ date: item.date, drink: item.drink, price: item.price, comment: item.comment });
+                if(item.price && !isNaN(item.price)) { totalMoney += Number(item.price); }
+            });
+
+            var data = Object.values(groupedShops);
+
+            var periodText = targetYear === 'all' ? '全期間' : targetYear + '年';
+            document.getElementById('stat-title').textContent = 'コーヒー活動記録 (' + periodText + ')';
+            document.getElementById('stat-cups').textContent = filteredFlatData.length + ' 杯';
+            document.getElementById('stat-shops').textContent = data.length + ' 店舗';
+            document.getElementById('stat-money').textContent = '¥ ' + totalMoney.toLocaleString();
+
+            data.sort(function(a, b) {
+                var latestA = new Date(Math.max(...a.visits.map(v => new Date(v.date))));
+                var latestB = new Date(Math.max(...b.visits.map(v => new Date(v.date))));
+                return latestA - latestB; 
+            });
+
+            data.forEach(shop => {
+                shop.visits.sort((a, b) => new Date(b.date) - new Date(a.date));
+                var visitCount = shop.visits.length;
+                var latestVisit = shop.visits[0]; 
+                var visitYear = latestVisit.date.substring(0, 4);
+                var pinColor = getYearColor(visitYear);
+
+                var badgeSvg = '';
+                if (visitCount > 1) {
+                    badgeSvg = `<circle cx="22" cy="6" r="8" fill="#e74c3c" stroke="#ffffff" stroke-width="2" /><text x="22" y="9" font-family="sans-serif" font-size="9" font-weight="bold" fill="white" text-anchor="middle">${visitCount}</text>`;
+                }
+                var pinSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="30" height="45" style="overflow: visible; transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);" class="map-pin-svg"><path fill="${pinColor}" stroke="#ffffff" stroke-width="2" d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24C24 5.4 18.6 0 12 0zm0 17c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5z"/>${badgeSvg}</svg>`;
+
+                var customIcon = L.divIcon({ html: pinSvg, className: '', iconSize: [30, 45], iconAnchor: [15, 45], popupAnchor: [0, -45] });
+
+                var popupContent = '<b style="font-size:15px;">' + shop.name + '</b><div class="popup-history">';
+                shop.visits.forEach(visit => {
+                    popupContent += '<div class="history-item"><span style="color: #888; font-size: 12px;">📅 ' + visit.date + '</span><br>☕️ ' + visit.drink + '（¥' + visit.price + '）<br><small style="color: #555;">' + visit.comment + '</small></div>';
+                });
+                popupContent += '</div>';
+                
+                var marker = L.marker([shop.lat, shop.lng], { icon: customIcon }).addTo(markerGroup)
+                    .bindPopup(popupContent)
+                    .bindTooltip(shop.name, { direction: 'top', offset: [0, -35], className: 'glass-tooltip' });
+
+                var listItem = document.createElement('div');
+                listItem.className = 'list-item'; 
+                var badgeHtml = visitCount > 1 ? '<span class="badge">' + visitCount + '回</span>' : '';
+                listItem.innerHTML = '<div class="list-name">' + shop.name + badgeHtml + '</div><div class="list-date">最終訪問: ' + latestVisit.date + '</div>';
+
+                listItem.addEventListener('click', function() {
+                    map.flyTo([shop.lat, shop.lng], 14, { duration: 1.5 });
+                    marker.openPopup();
+                    if (window.innerWidth <= 768) {
+                        listContainer.classList.remove('active');
+                        toggleBtn.textContent = 'リストを表示 📝';
+                        setTimeout(function() { map.invalidateSize(); }, 100);
+                    }
+                });
+
+                listItem.addEventListener('mouseenter', function() { var el = marker.getElement(); if(el) el.classList.add('pin-hover-effect'); });
+                listItem.addEventListener('mouseleave', function() { var el = marker.getElement(); if(el) el.classList.remove('pin-hover-effect'); });
+
+                listContent.appendChild(listItem);
+            });
+        }
+    </script> 
+</body>
+</html>

@@ -14,14 +14,14 @@
             margin: 0; 
             padding: 0; 
             font-family: 'Zen Kaku Gothic New', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #000; /* ロード時のチラつき防止 */
+            background-color: #000; 
             color: white;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
 
-        /* 玄関の背景画像（お好みの全体風景などに差し替えてください） */
+        /* 玄関全体の背景画像 */
         .portal-bg {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -31,15 +31,13 @@
             z-index: -2;
         }
 
-        /* 背景を少し暗く落としてカードを際立たせるフィルター */
         .portal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at center, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%);
+            background: radial-gradient(circle at center, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.85) 100%);
             z-index: -1;
         }
 
-        /* ヘッダー部分 */
         header {
             padding: calc(60px + env(safe-area-inset-top)) 20px 40px;
             text-align: center;
@@ -56,11 +54,9 @@
             letter-spacing: 2px; text-shadow: 0 2px 10px rgba(0,0,0,0.8);
         }
 
-        /* カードを並べるグリッドレイアウト */
         .card-container {
             flex: 1;
             display: grid;
-            /* 画面幅に合わせてカードの列数を自動調整（レスポンシブ） */
             grid-template-columns: repeat(auto-fit, minmax(280px, 320px));
             gap: 30px;
             padding: 20px;
@@ -70,62 +66,77 @@
             margin: 0 auto 60px;
         }
 
-        /* ぬめっと動くすりガラスカードの魔法 */
-        .glass-card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+        /* ★ 絵文字アイコンを排除し、写真カード用のスタイルに変更 */
+        .image-card {
+            position: relative;
             border-radius: 24px;
-            padding: 40px 30px;
+            padding: 40px 30px 30px 30px;
             text-align: center;
-            text-decoration: none; /* リンクの下線を消す */
+            text-decoration: none; 
             color: white;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            /* ★ ここがぬめっとした動きの肝（cubic-bezierで物理的な慣性を表現） */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            /* ぬめっとした極上のモーション */
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             display: flex;
             flex-direction: column;
-            align-items: center;
+            justify-content: flex-end; /* 文字をカードの下の方に配置 */
+            min-height: 280px; /* カードの高さを少し大きくして写真を見せる */
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .glass-card:hover {
-            transform: translateY(-12px) scale(1.02); /* ふわっと浮いて少し拡大 */
-            background: rgba(255, 255, 255, 0.15); /* 少し明るくなる */
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 20px rgba(255,255,255,0.1); /* 発光するような影 */
+        .image-card:hover {
+            transform: translateY(-12px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.3);
         }
 
-        .glass-card:active {
-            transform: translateY(0) scale(0.98); /* 押した瞬間に沈み込む */
+        .image-card:active {
+            transform: translateY(0) scale(0.98);
             transition: all 0.1s;
         }
 
-        /* カード内のアイコンとテキスト */
-        .card-icon {
-            font-size: 40px;
-            margin-bottom: 20px;
-            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5));
+        /* * ★ 各カード個別の背景画像設定
+         * linear-gradient(…) を重ねることで、写真の下半分だけを暗くして文字を読みやすくしています。
+         * url('...') の中身をご自身のローカル画像のファイル名（例: 'coffee-bg.jpg'）に変更してください！
+         */
+        .card-coffee {
+            background-image: linear-gradient(to bottom, rgba(0,0,0,0.1) 30%, rgba(0,0,0,0.8) 100%), url('https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=800&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
         }
 
+        .card-machichuka {
+            background-image: linear-gradient(to bottom, rgba(0,0,0,0.1) 30%, rgba(0,0,0,0.8) 100%), url('https://images.unsplash.com/photo-1569718212165-3a8278d5f624?q=80&w=800&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .card-hiking {
+            background-image: linear-gradient(to bottom, rgba(0,0,0,0.1) 30%, rgba(0,0,0,0.8) 100%), url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=800&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* 文字のデザイン調整 */
         .card-title {
-            font-size: 22px;
+            font-size: 24px;
             font-weight: 700;
-            margin: 0 0 10px 0;
+            margin: 0 0 8px 0;
             letter-spacing: 2px;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.8);
         }
 
         .card-desc {
             font-size: 13px;
-            opacity: 0.7;
+            opacity: 0.9;
             margin: 0;
             line-height: 1.6;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.8);
         }
 
         @media (max-width: 768px) {
             header h1 { font-size: 36px; }
             .card-container { gap: 20px; grid-template-columns: 1fr; max-width: 360px; }
-            .glass-card { padding: 30px 20px; }
+            .image-card { min-height: 220px; padding: 30px 20px 20px 20px; }
         }
     </style>
 </head>
@@ -135,27 +146,24 @@
     <div class="portal-overlay"></div>
 
     <header>
-        <h1>vhgkor</h1>
-        <p>Exploration & Records</p>
+        <h1>vhgkor-pedia</h1>
+        <p>探索と記録</p>
     </header>
 
     <div class="card-container">
-        <a href="coffee.html" class="glass-card">
-            <div class="card-icon">☕️</div>
-            <h2 class="card-title">珈琲紀行</h2>
-            <p class="card-desc">開拓したロースタリーの記録</p>
+        <a href="coffee.html" class="image-card card-coffee">
+            <h2 class="card-title">ぼくのコーヒー図鑑</h2>
+            <!-- <p class="card-desc">開拓したロースタリーや<br>カフェの記録と評価</p> -->
         </a>
 
-        <a href="machichuka.html" class="glass-card">
-            <div class="card-icon">🍜</div>
-            <h2 class="card-title">町中華紀行</h2>
-            <p class="card-desc">これからも残り続けてほしい<br>町中華屋の記録</p>
+        <a href="machichuka.html" class="image-card card-machichuka">
+            <h2 class="card-title">ぼくの町中華図鑑</h2>
+            <!-- <p class="card-desc">絶品の炒飯と餃子を求めて<br>街角の老舗を巡る記録</p> -->
         </a>
 
-        <a href="hiking.html" class="glass-card">
-            <div class="card-icon">⛰️</div>
-            <h2 class="card-title">登山紀行</h2>
-            <p class="card-desc">登頂した山々の記録</p>
+        <a href="hiking.html" class="image-card card-hiking">
+            <h2 class="card-title">ぼくのハイク図鑑</h2>
+            <!-- <p class="card-desc">登頂した山々のルートと<br>絶景撮影スポットの足跡</p> -->
         </a>
     </div>
 

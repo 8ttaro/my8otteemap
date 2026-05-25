@@ -39,8 +39,13 @@
         }
 
         header {
-            padding: calc(60px + env(safe-area-inset-top)) 20px 40px;
-            text-align: center;
+            /* 上・左右・下の余白を調整 */
+            padding: calc(150px + env(safe-area-inset-top)) 5% 30px;
+            text-align: center; /* ★ここを center から left に変更すると左寄せになります */
+            max-width: 1200px; /* カードの幅と合わせる */
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         header h1 {
@@ -49,8 +54,10 @@
         }
 
         header p {
-            margin: 15px 0 0 0; font-family: 'Cormorant Garamond', serif;
-            font-size: 20px; font-style: italic; opacity: 0.8;
+            margin: 15px 0 0 0; 
+            font-family: "Zen Kaku Gothic New", serif;
+            font-size: 20px;  
+            opacity: 0.8;
             letter-spacing: 2px; text-shadow: 0 2px 10px rgba(0,0,0,0.8);
         }
 
@@ -146,8 +153,8 @@
     <div class="portal-overlay"></div>
 
     <header>
-        <h1>vhgkor-pedia</h1>
-        <p>探索と記録</p>
+        <h1>vhgpedia</h1>
+        <p>Vhgkorの好きなものを集めた図鑑。</p>
     </header>
 
     <div class="card-container">

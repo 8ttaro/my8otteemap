@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>Vhgkor's Coffee Map</title>
+    <title>偏愛町中華</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -36,9 +36,10 @@
             scroll-snap-align: start;
             scroll-snap-stop: always;
 
-            background-image: url('ASATTECOFFEE.JPG'); 
+            /* ★背景画像は町中華用の写真に変更してください */
+            background-image: url('MACHICHUKA.JPG'); 
             background-size: cover;
-            background-position: 50% 77%;
+            background-position: 50% 50%;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -62,8 +63,8 @@
         }
 
         .hero-content p {
-            margin: 15px 0 0 0; font-family: 'Cormorant Garamond', serif;
-            font-size: 22px; font-style: italic; opacity: 0.9;
+            margin: 15px 0 0 0; font-family: 'Zen Kaku Gothic New', serif;
+            font-size: 20px; opacity: 0.9;
             letter-spacing: 2px; text-shadow: 0 2px 8px rgba(0,0,0,0.6);
         }
 
@@ -93,7 +94,6 @@
             position: relative;
         }
 
-        /* 統計ボタン（右上） */
         #stat-btn {
             position: absolute; 
             right: 20px; 
@@ -109,7 +109,6 @@
         #stat-btn:active { opacity: 0.5; transform: scale(0.9); }
         #stat-btn svg { fill: #333; }
 
-        /* TOPへ戻るボタン（右下） */
         #back-to-top-btn {
             position: absolute; 
             right: 20px; 
@@ -153,7 +152,7 @@
         .stat-box { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.6); padding: 30px 25px; border-radius: 24px; width: 80%; max-width: 320px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15); animation: springPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         @keyframes springPop { 0% { transform: scale(0.8) translateY(20px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
         .stat-box h3 { margin-top: 0; color: #333; font-size: 18px; border-bottom: 2px solid rgba(139, 69, 19, 0.2); padding-bottom: 12px; font-weight: 700; }
-        .stat-number { font-size: 32px; font-weight: 700; color: #8B4513; margin: 5px 0; text-shadow: 0 2px 4px rgba(139,69,19,0.1); }
+        .stat-number { font-size: 32px; font-weight: 700; color: #D32F2F; margin: 5px 0; text-shadow: 0 2px 4px rgba(211,47,47,0.1); }
         .stat-label { font-size: 12px; color: #666; margin-bottom: 20px; font-weight: 700; }
         #close-stat-btn { background-color: #f2f2f7; color: #333; border: none; padding: 10px 24px; border-radius: 20px; cursor: pointer; font-weight: 700; margin-top: 15px; transition: all 0.2s; font-family: inherit; }
         #close-stat-btn:hover { background-color: #e5e5ea; transform: scale(1.05); }
@@ -176,7 +175,7 @@
             #list-container.active { display: flex; }
             #map { flex: 1; min-height: 0; }
             
-            #toggle-list-btn { display: block; position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 2000; background-color: rgba(139, 69, 19, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 14px 28px; border-radius: 30px; font-size: 14px; font-weight: 700; box-shadow: 0 8px 16px rgba(139,69,19,0.3); transition: transform 0.2s, box-shadow 0.2s; font-family: inherit; }
+            #toggle-list-btn { display: block; position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 2000; background-color: rgba(211, 47, 47, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 14px 28px; border-radius: 30px; font-size: 14px; font-weight: 700; box-shadow: 0 8px 16px rgba(211,47,47,0.3); transition: transform 0.2s, box-shadow 0.2s; font-family: inherit; }
             #toggle-list-btn:active { transform: translateX(-50%) scale(0.95); }
         }
     </style>
@@ -186,8 +185,8 @@
     <header id="hero-section" class="hero-section">
         <div class="hero-overlay"></div>
         <div class="hero-content">
-            <h1>偏愛コーヒー</h1>
-            <p>A Journey Through Roasteries & Cafés</p>
+            <h1>偏愛町中華</h1>
+            <p>絶品を求めて街角を巡る記録</p>
         </div>
         <a href="#app-section" class="scroll-prompt">
             <span>SCROLL</span>
@@ -221,12 +220,12 @@
 
     <div id="stat-modal">
         <div class="stat-box">
-            <h3 id="stat-title">コーヒー活動記録</h3>
-            <div class="stat-label">総来店回数 (飲んだ杯数)</div>
-            <div class="stat-number" id="stat-cups">0 杯</div>
+            <h3 id="stat-title">町中華活動記録</h3>
+            <div class="stat-label">総来店回数 (食べた回数)</div>
+            <div class="stat-number" id="stat-cups">0 食</div>
             <div class="stat-label">開拓した店舗数</div>
             <div class="stat-number" id="stat-shops">0 店舗</div>
-            <div class="stat-label">コーヒーに使った総額</div>
+            <div class="stat-label">町中華に使った総額</div>
             <div class="stat-number" id="stat-money">¥ 0</div>
             <button id="close-stat-btn">閉じる</button>
         </div>
@@ -237,14 +236,12 @@
         var lightMap = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution: '&copy; OpenStreetMap &copy; CARTO'});
         var darkMap = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {attribution: '&copy; OpenStreetMap &copy; CARTO'});
 
-        // ★ 変更：scrollWheelZoom: false を削除し、マップ上のスクロールでズームできるようにしました
         var map = L.map('map', {
             center: [36.2048, 138.2529],
             zoom: 5,
             layers: [lightMap]
         });
 
-        // ★ 変更：名前を「ライト」と「ダーク」に固定しました
         var baseMaps = {
             "ライト": lightMap,
             "ダーク": darkMap
@@ -275,14 +272,15 @@
         closeStatBtn.addEventListener('click', function() { statModal.style.display = 'none'; });
 
         function getYearColor(year) {
-            if (year === '2026') return '#8B4513'; 
-            if (year === '2025') return '#D35400'; 
-            if (year === '2024') return '#2980B9'; 
-            if (year === '2023') return '#27AE60'; 
+            if (year === '2026') return '#D32F2F'; /* ★町中華らしい赤色に変更 */
+            if (year === '2025') return '#F57C00'; 
+            if (year === '2024') return '#1976D2'; 
+            if (year === '2023') return '#388E3C'; 
             return '#7F8C8D';                     
         }
 
-        fetch('coffeeshops.json')
+        // ★データの読み込み先を machichukashops.json に変更
+        fetch('machichukashops.json')
             .then(response => response.json())
             .then(flatData => {
                 var years = ['all'];
@@ -332,15 +330,16 @@
                 if (!groupedShops[item.name]) {
                     groupedShops[item.name] = { name: item.name, lat: item.lat, lng: item.lng, visits: [] };
                 }
-                groupedShops[item.name].visits.push({ date: item.date, drink: item.drink, price: item.price, comment: item.comment });
+                // ★ drink ではなく menu を読み込むように変更
+                groupedShops[item.name].visits.push({ date: item.date, menu: item.menu, price: item.price, comment: item.comment });
                 if(item.price && !isNaN(item.price)) { totalMoney += Number(item.price); }
             });
 
             var data = Object.values(groupedShops);
 
             var periodText = targetYear === 'all' ? '全期間' : targetYear + '年';
-            document.getElementById('stat-title').textContent = 'コーヒー活動記録 (' + periodText + ')';
-            document.getElementById('stat-cups').textContent = filteredFlatData.length + ' 杯';
+            document.getElementById('stat-title').textContent = '町中華活動記録 (' + periodText + ')';
+            document.getElementById('stat-cups').textContent = filteredFlatData.length + ' 食';
             document.getElementById('stat-shops').textContent = data.length + ' 店舗';
             document.getElementById('stat-money').textContent = '¥ ' + totalMoney.toLocaleString();
 
@@ -359,7 +358,7 @@
 
                 var badgeSvg = '';
                 if (visitCount > 1) {
-                    badgeSvg = `<circle cx="22" cy="6" r="8" fill="#e74c3c" stroke="#ffffff" stroke-width="2" /><text x="22" y="9" font-family="sans-serif" font-size="9" font-weight="bold" fill="white" text-anchor="middle">${visitCount}</text>`;
+                    badgeSvg = `<circle cx="22" cy="6" r="8" fill="#D32F2F" stroke="#ffffff" stroke-width="2" /><text x="22" y="9" font-family="sans-serif" font-size="9" font-weight="bold" fill="white" text-anchor="middle">${visitCount}</text>`;
                 }
                 var pinSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="30" height="45" style="overflow: visible; transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);" class="map-pin-svg"><path fill="${pinColor}" stroke="#ffffff" stroke-width="2" d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24C24 5.4 18.6 0 12 0zm0 17c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5z"/>${badgeSvg}</svg>`;
 
@@ -367,7 +366,8 @@
 
                 var popupContent = '<b style="font-size:15px;">' + shop.name + '</b><div class="popup-history">';
                 shop.visits.forEach(visit => {
-                    popupContent += '<div class="history-item"><span style="color: #888; font-size: 12px;">📅 ' + visit.date + '</span><br>☕️ ' + visit.drink + '（¥' + visit.price + '）<br><small style="color: #555;">' + visit.comment + '</small></div>';
+                    // ★ アイコンを🍜に変更し、visit.menu を表示する
+                    popupContent += '<div class="history-item"><span style="color: #888; font-size: 12px;">📅 ' + visit.date + '</span><br>🍜 ' + visit.menu + '（¥' + visit.price + '）<br><small style="color: #555;">' + visit.comment + '</small></div>';
                 });
                 popupContent += '</div>';
                 
@@ -377,7 +377,7 @@
 
                 var listItem = document.createElement('div');
                 listItem.className = 'list-item'; 
-                var badgeHtml = visitCount > 1 ? '<span class="badge">' + visitCount + '回</span>' : '';
+                var badgeHtml = visitCount > 1 ? '<span class="badge" style="background-color: #D32F2F;">' + visitCount + '回</span>' : '';
                 listItem.innerHTML = '<div class="list-name">' + shop.name + badgeHtml + '</div><div class="list-date">最終訪問: ' + latestVisit.date + '</div>';
 
                 listItem.addEventListener('click', function() {
